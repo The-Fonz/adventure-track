@@ -13,5 +13,5 @@ app.register_blueprint(history_bp)
 from .live import bp as live_bp
 app.register_blueprint(live_bp)
 
-from .config import bp as config_bp
+from .siteconfig import bp as config_bp
 app.register_blueprint(config_bp)
