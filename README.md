@@ -28,7 +28,7 @@ To present the data and enable interaction, we can use four widgets:
 These can be presented in different layouts depending on device.
 
 ## System architecture
-I sat down, thought long and hard, then designed a modular architecture around standalone worker processes that communicate using (redis) pub/sub channels, with some tasks outsourced to [redis-queue](python-rq.org). To get the media into the system, [Telegram](telegram.org) is ideal as it supports all mobile platforms and has extensive APIs. It does require some fiddling when using it in-flight, but saves us from natively implementing things like video recording, transcoding, and uploading.
+I've come up with a microservice-based architecture, where each service encapsulates a specific set of functionality and has its own data store. Any service can expose a HTTP REST API and/or a redis pub/sub channel (for updates). Long-running tasks can be outsourced to[redis-queue](python-rq.org). To get the media into the system, [Telegram](telegram.org) is ideal as it supports all mobile platforms and has extensive APIs. It does require some fiddling when using it in-flight, but saves us from natively implementing things like video recording, transcoding, and uploading.
 
 Here's the full diagram:
 
