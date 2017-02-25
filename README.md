@@ -40,7 +40,6 @@ Here's some requirements mixed with implementation details. *MSG_CLICK* is a pub
 - Map
   - Show athlete routes, markers
   - Should zoom to include all athlete's positions initially
-  - Pan to 
   - 2D should be fast (use [Leaflet](leafletjs.com))
   - 3D version should be fast (Cesium is quite heavy, but implementing this is for later)
   - Restrict pan to adventure bounding box
@@ -82,5 +81,12 @@ Here's some requirements mixed with implementation details. *MSG_CLICK* is a pub
   - Show blog, map, chat as tabs on small screens, focus to right tab on *MSG_CLICK* 
   - Show map, timeline, blog vertically in medium/large portrait mode with expandable chat widget
   - Show map left, timeline and blog right on medium/large landscape mode screens with expandable chat widget
-  
-  
+
+- Administrator interface
+  - Permits configuring different sites for different adventures
+  - Shows system state
+
+- Athlete dashboard
+  - For athlete or race directors
+  - Simple admin section permits setting some basic things like site title, about-me
+  - Shows useful metrics
