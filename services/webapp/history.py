@@ -14,7 +14,10 @@ class Tracks(Resource):
         args = parser.parse_args()
         # Get location points (simplified if needed)
         loc_url = current_app.config['CA_LOCATION_SERVICE']
-        resp = requests.get(loc_url,
+        # Must be specified with trailing slash
+        if not loc_url[-1] == '/':
+            raise Warning("Specify service URL with trailing slash")
+        resp = requests.get(loc_url + adventure_id,
                 timeout=3.05,
                 params={'since': args.get('since', None)})
         if resp.status_code != 200:
@@ -27,7 +30,7 @@ class Posts(Resource):
         args.get('since', None)
         return "all posts since"
 
-class ChatMessages(Resource):
+class ChatMsgs(Resource):
     def get(self, adventure_id, since=None):
         args = parser.parse_args()
         args.get('since', None)
@@ -35,4 +38,4 @@ class ChatMessages(Resource):
 
 api.add_resource(Tracks, '/tracks/<adventure_id>')
 api.add_resource(Posts, '/posts/<adventure_id>')
-api.add_resource(ChatMessages, '/chatmessages/<adventure_id>')
+api.add_resource(ChatMsgs, '/chatmsgs/<adventure_id>')

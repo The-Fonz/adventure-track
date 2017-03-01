@@ -1,0 +1,46 @@
+---
+- hosts: all
+  remote_user: vagrant
+  become: true
+  become_method: sudo
+  vars:
+    USER: ca-user
+    # Insecure password is not an issue for dev box
+    PASSWORD: adventure01
+    DEV: true
+    USER_ROOT: /home/{{USER}}
+    REPO_ROOT: "{{USER_ROOT}}/come-along"
+    CA_PG_URI: postgresql://{{USER}}:{{PASSWORD}}@localhost/casite
+
+  roles:
+    - add_user
+    - common
+#    - devdata
+    - role: jdauphant.nginx
+      tags: ["nginx"]
+      # TODO: Turn sendfile off ONLY FOR DEV SERVER
+      nginx_http_params: ["sendfile off", "open_file_cache off"]
+      nginx_configs:
+        gzip:
+          - gzip on
+          - gzip_min_length 1000
+          - gzip_types text/plain text/css application/json application/javascript text/javascript
+      nginx_sites:
+        casite:
+         - listen 80
+         # TODO: Replace with proper URL, _ only in vm
+         - server_name _
+         - |
+           location / { include proxy_params;
+                        proxy_pass http://localhost:8080;
+                      }
+         # TODO: Add support for load-balancing as per flask-socketio docs
+         - |
+           location /socketio { include proxy_params;
+                                proxy_http_version 1.1;
+                                proxy_buffering off;
+                                proxy_set_header Upgrade $http_upgrade;
+                                proxy_set_header Connection "Upgrade";
+                                proxy_pass http://localhost:8080/socketio;
+                              }
+         # TODO: Use nginx thread pools with video directory

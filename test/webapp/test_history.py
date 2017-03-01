@@ -3,7 +3,6 @@ import unittest
 from unittest.mock import patch
 
 from flask import Flask
-
 from webapp import history
 
 

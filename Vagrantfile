@@ -9,7 +9,7 @@ Vagrant.configure("2") do |config|
 
     config.vm.synced_folder ".", "/vagrant", disabled: true
 
-    config.vm.synced_folder ".", "/home/causer/come-along"
+    config.vm.synced_folder ".", "/home/ca-user/come-along"
 
     config.vm.provider "virtualbox" do |vb|
         vb.memory = "512"
@@ -18,6 +18,6 @@ Vagrant.configure("2") do |config|
     config.vm.provision :ansible do |ansible|
         # Use export ANSIBLE_TAGS="tag1,tag2"; vagrant provision
         ansible.tags = ANSIBLE_TAGS
-        ansible.playbook = "playbook.yml"
+        ansible.playbook = "ansible/vagrant-playbook.yml"
     end
 end
