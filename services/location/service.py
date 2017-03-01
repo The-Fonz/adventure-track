@@ -22,25 +22,26 @@ class LocationService:
         self.db.commit()
 
     @rpc
-    def get_line(self, user_id, start=None, end=None, simplify=0):
+    def get_points(self, user_id, start=None, end=None):
         # Always filter by user ID
         # ST_Simplify only uses 2D points to simplify!
-        # TODO: Select timestamps, points and manually convert these to json
-        qs = ("SELECT ST_AsGeoJSON(ST_Simplify("
-              "ST_MakeLine("
-              "gps_point.geom ORDER BY gps_point.timestamp"
-              "), :simplify, TRUE), :decimaldigits) "
+        qs = ("SELECT gps_point.timestamp, ST_AsText(gps_point.geom) "
               "FROM gps_point WHERE gps_point.user_id=:user_id ")
+        paramkwargs = {'user_id': user_id}
         # After start if given
         if start:
             qs += "AND gps_point.timestamp >= :start "
+            paramkwargs['start'] = start
         if end:
             qs += "AND gps_point.timestamp <= :end "
-        q = text(qs).bindparams(user_id=user_id,
-                                simplify=simplify,
-                                # Precision up to 0.11m
-                                decimaldigits=6)
-        return self.db.execute(q).first()[0]
+            paramkwargs['end'] = end
+        qs += "ORDER BY gps_point.timestamp ASC "
+        q = text(qs).bindparams(**paramkwargs)
+        res = self.db.execute(q).fetchall()
+        # Convert to custom format
+        parsept = lambda p: [float(c) for c in p.split('(')[-1].split(')')[0].split()]
+        return {"coordinates": [parsept(p) for d,p in res],
+                "timestamps": [d.isoformat() for d,p in res]}
 
 
 @pytest.fixture
@@ -67,15 +68,13 @@ def test_service(session):
     for td,coords in zip([0,100,200], [(0,10,20),(3,4,5),(6,7,8)]):
         ls.add_point(1, t+timedelta(td), coords)
     # Get all points
-    res = ls.get_line(1)
-    res = json.loads(res)
-    assert res["type"] == 'LineString'
-    assert res["coordinates"] == [[0,10,20],[3,4,5],[6,7,8]]
-    res = ls.get_line(1, simplify=10)
-    res = json.loads(res)
-    assert res["type"] == 'LineString'
-    assert res["coordinates"] == [[0, 10, 20], [6, 7, 8]]
-    # Get all points from time
-    # Get all points until end
-    # Get all points from start to end
-    # Get simplified line
+    res = ls.get_points(1)
+    assert res["coordinates"] == [[0.,10.,20.],[3.,4.,5.],[6.,7.,8.]]
+    # Check timestamp format
+    assert res["timestamps"][0] == t.isoformat()
+    # Get all points except first
+    res = ls.get_points(1, start=t+timedelta(1))
+    assert res["coordinates"] == [[3., 4., 5.], [6., 7., 8.]]
+    # Get only middle point
+    res = ls.get_points(1, start=t + timedelta(1), end=t + timedelta(150))
+    assert res["coordinates"] == [[3.,4.,5.]]
