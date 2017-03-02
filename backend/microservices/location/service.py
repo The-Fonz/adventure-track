@@ -3,8 +3,7 @@ import pytest
 from nameko.rpc import rpc
 from nameko.testing.services import worker_factory
 from nameko_sqlalchemy import Session
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 
 from .models import Base, GpsPoint
 
@@ -44,25 +43,10 @@ class LocationService:
                 "timestamps": [d.isoformat() for d,p in res]}
 
 
-@pytest.fixture
-def session():
-    "Create test db and session"
-    import os
-    engine = create_engine(os.environ['CA_PG_URI'])
-    Base.metadata.create_all(engine)
-    session_cls = sessionmaker(bind=engine)
-    session = session_cls()
-    yield session
-    # Explicitly close db connection to avoid hang
-    session.close()
-    # Drop after testing finishes
-    Base.metadata.drop_all(engine)
-
-
-def test_service(session):
-    import json
+@pytest.mark.parametrize('base', [Base])
+def test_service(testsession):
     from datetime import datetime, timedelta
-    ls = worker_factory(LocationService, db=session)
+    ls = worker_factory(LocationService, db=testsession)
     t = datetime.now()
     # Make test data, make sure they're not in line!
     for td,coords in zip([0,100,200], [(0,10,20),(3,4,5),(6,7,8)]):

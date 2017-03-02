@@ -4,6 +4,7 @@
     line: "LC_ALL=C.UTF-8"
 
 - name: install packages
+  tags: ["apt"]
   apt: name={{item}} state=present
   with_items:
     - gcc
@@ -19,6 +20,8 @@
     - "*postgis-scripts"
     # Used by ansible postgres module
     - python-psycopg2
+    # Convert video, audio
+    - ffmpeg
 
 - name: make virtualenv and install python3 dependencies
   pip:
@@ -36,34 +39,3 @@
     - nameko
     - nameko-sqlalchemy
     - kombu
-
-- name: make new postgres db
-  become: true
-  become_user: postgres
-  become_method: sudo
-  postgresql_db:
-    name: casite
-    encoding: 'UTF-8'
-    lc_collate: 'en_US.UTF-8'
-    lc_ctype: 'en_US.UTF-8'
-    template: 'template0'
-
-- name: make new postgres user
-  become: true
-  become_user: postgres
-  become_method: sudo
-  postgresql_user:
-    db: casite
-    name: "{{USER}}"
-    password: "{{PASSWORD}}"
-
-- name: add postgis to db
-  become: true
-  become_user: postgres
-  become_method: sudo
-  postgresql_ext: name=postgis db=casite
-
-- name: put database url in environment file for easy cmdline use
-  lineinfile:
-    dest: /etc/environment
-    line: 'CA_PG_URI="{{CA_PG_URI}}"'

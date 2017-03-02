@@ -1,10 +1,12 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, DateTime
 from geoalchemy2 import Geometry
 
 Base = declarative_base()
 
+
 class GpsPoint(Base):
+    "3D lat/lon/alt point"
     __tablename__ = 'gps_point'
     id = Column(Integer, primary_key=True)
     # All times in UTC please

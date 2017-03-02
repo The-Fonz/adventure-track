@@ -10,11 +10,15 @@
     DEV: true
     USER_ROOT: /home/{{USER}}
     REPO_ROOT: "{{USER_ROOT}}/come-along"
-    CA_PG_URI: postgresql://{{USER}}:{{PASSWORD}}@localhost/casite
 
   roles:
     - add_user
     - common
+    - role: postgres
+      dbname: casite
+    # Separate test db
+    - role: postgres
+      dbname: catestdb
 #    - devdata
     - role: jdauphant.nginx
       tags: ["nginx"]
@@ -43,4 +47,8 @@
                                 proxy_set_header Connection "Upgrade";
                                 proxy_pass http://localhost:8080/socketio;
                               }
-         # TODO: Use nginx thread pools with video directory
+         # Don't use nginx thread pools with video directory,
+         # probably all video files for a popular race will be cached in memory
+         # which is faster. With nginx/linux it's either non-blocking loading
+         # from disk with thread pools or blocking loading from memory/disk.
+         # (nginx cannot check if a file is cached in memory due to kernel)
