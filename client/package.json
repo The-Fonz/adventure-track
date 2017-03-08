@@ -1,0 +1,38 @@
+{
+  "name": "adventure-track-client",
+  "version": "0.0.0",
+  "scripts": {
+    "prewatch": "if [ -z $MAPBOX_ACCESSTOKEN ]; then echo \"Please set environment variable MAPBOX_ACCESSTOKEN!\"; fi;",
+    "watch": "TEST=true NODE_ENV=development watchify -v --debug src/main-test.js -o bundle.js -t vueify -t babelify -t envify"
+  },
+  "babel": {
+    "presets": [
+      "latest"
+    ],
+    "plugins": [
+      "transform-flow-strip-types"
+    ]
+  },
+  "dependencies": {
+    "axios": "^0.15.3",
+    "babel-core": "^6.23.1",
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.2.1",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-latest": "^6.22.0",
+    "babel-preset-stage-0": "^6.22.0",
+    "babelify": "^7.3.0",
+    "envify": "^4.0.0",
+    "jade": "^1.11.0",
+    "mapbox-gl": "^0.32.1",
+    "rx": "^4.1.0",
+    "rxjs": "^5.2.0",
+    "stylus": "^0.54.5",
+    "tape": "^4.6.3",
+    "vis": "^4.18.1",
+    "vue": "^2.2.1",
+    "vue-rx": "^2.3.1",
+    "vueify": "^9.4.0"
+  }
+}

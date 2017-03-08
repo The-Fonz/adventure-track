@@ -96,3 +96,5 @@ ENV/
 .vagrant/
 .idea/
 *.retry
+bundle.js
+node_modules/
