@@ -11,7 +11,7 @@ class Message(Base):
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime)
     user_id = Column(Integer)
-    # Can omit title or body text
+    # Might be a video or voice message, so title/text can be omitted
     title = Column(Text, nullable=True)
     text = Column(Text, nullable=True)
     # Store original, max. path size is 255 on most systems
@@ -24,6 +24,8 @@ class Message(Base):
     video_versions = Column(JSONB, nullable=True)
     audio_original = Column(String(255), nullable=True)
     audio_versions = Column(JSONB, nullable=True)
+    # Store original Telegram message json for later analysis
+    telegram_message = Column(JSONB, nullable=True)
 
 
 class ChatMessage(Base):
@@ -33,5 +35,7 @@ class ChatMessage(Base):
     timestamp = Column(DateTime)
     text = Column(Text)
     # Identify sender using various attributes
-    # e.g. typed name, uuid, or other things
+    # e.g. typed name, uuid, telegram user json obj, or other things
     sender = Column(JSONB)
+    # If received from a Telegram chat, store original msg here
+    telegram_message = Column(JSONB, nullable=True)

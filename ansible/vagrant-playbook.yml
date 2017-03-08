@@ -4,12 +4,20 @@
   become: true
   become_method: sudo
   vars:
+    # User specifically created for running this app
     USER: ca-user
     # Insecure password is not an issue for dev box
     PASSWORD: adventure01
     DEV: true
     USER_ROOT: /home/{{USER}}
     REPO_ROOT: "{{USER_ROOT}}/come-along"
+
+  tasks:
+    - name: set media root for services and tasks
+      # Subfolder convention is: /video /audio /image
+      lineinfile:
+        dest: /etc/environment
+        line: 'CA_MEDIA_ROOT="{{USER_ROOT}}/media"'
 
   roles:
     - add_user

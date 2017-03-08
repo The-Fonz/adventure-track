@@ -1,5 +1,6 @@
 DB_URIS:
   "location_service:Base": ${DB_URI_CASITE}
+  "message_service:Base": ${DB_URI_CASITE}
 AMQP_URI: 'pyamqp://guest:guest@localhost'
 WEB_SERVER_ADDRESS: '0.0.0.0:8000'
 rpc_exchange: 'nameko-rpc'

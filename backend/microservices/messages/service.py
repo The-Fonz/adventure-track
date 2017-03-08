@@ -1,5 +1,4 @@
 import pytest
-
 from nameko.rpc import rpc
 from nameko.testing.services import worker_factory
 from nameko_sqlalchemy import Session
@@ -8,7 +7,7 @@ from .models import Base, Message, ChatMessage
 
 
 class MessageService:
-    name = "location_service"
+    name = "message_service"
 
     db = Session(Base)
 
@@ -33,8 +32,6 @@ class MessageService:
                     image_original=image_original,
                     video_original=video_original,
                     audio_original=audio_original)
-        if not (text or title):
-            raise Warning("Specify either text or title")
         self.db.add(m)
         self.db.commit()
         # Message id must later be passed to self.add_media_detail
