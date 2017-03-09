@@ -1,14 +1,34 @@
-import Vue from 'vue';
-import Rx from 'rxjs/Rx';
-import VueRx from 'vue-rx';
+import {Db} from './components/db.js';
+import {Map} from './components/map.js';
+import vis from 'vis';
+import Ractive from 'ractive';
 
-import MainApp from './components/app.vue';
+let db = new Db();
 
-Vue.use(VueRx, Rx);
+let map = new Map('map-view');
 
-let vapp = new Vue({
-    el: '#mainapp',
-    render: h => h(MainApp),
+let ractive = new Ractive({
+    el: document.getElementById('blog'),
+    template: document.getElementById('blog-template').innerHTML,
+    data: {
+        messages: db.messages,
+    },
+    modifyArrays: true,
+    select: function (id) {
+        console.log("Clicked msg "+ id)
+    },
 });
 
-export {vapp};
+db.on('newTrack', (newMsg) => {
+    map.updateTrack();
+});
+
+let items = new vis.DataSet(db.messages);
+let options = {width: '100%', height: '150px',
+orientation: {axis: 'top', item: 'top'}};
+let timeline = new vis.Timeline(
+    document.getElementById('timeline'), items, options);
+
+db.on('newMsg', (newMsg) => {
+    items.add(newMsg);
+});

@@ -3,16 +3,62 @@
     <meta charset=utf-8>
     <title>xc-game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="node_modules/vis/dist/vis.css" rel="stylesheet" type="text/css" />
     <link href='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet' />
+    <link href='custom.css' rel="stylesheet" type="text/css" />
     <style>
         body {
             margin: 0;
+        }
+        .half {
+            width: 50%;
+            height: 100%;
+        }
+        .left {
+            float: left;
+        }
+        .right {
+            float: right;
+        }
+        /* Avoid text select on double click */
+        .noselect {
+            -webkit-user-select: none;
+         /* webkit (safari, chrome) browsers */
+            -moz-user-select: none;
+         /* mozilla browsers */
+            -khtml-user-select: none;
+         /* webkit (konqueror) browsers */
+            -ms-user-select: none;
+         /* IE10+ */;
+        }
+        #map-view {
+            height: 100%;
         }
     </style>
 </head>
 <body id="main">
 
-<div id="mainapp"></div>
+<div>
+  <div class="half left noselect">
+    <div id="map-view"></div>
+  </div>
+  <div class="half right">
+    <div id="timeline"></div>
+    <div id="blog"></div>
+  </div>
+</div>
+
+<template id="blog-template">
+    <div>
+        {{#messages}}
+            <div class="message" on-click="@this.select(this.id)">
+                Time: {{this.timestamp.fromNow()}}
+                Text: {{this.text}}
+            </div>
+        {{/messages}}
+    </div>
+</template>
 
 <script src="bundle.js"></script>
 </body>

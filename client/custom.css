@@ -1,0 +1,32 @@
+.vis-item.vis-line, .vis-item.vis-dot {
+    visibility: hidden;
+}
+
+.vis-item.msgtype-text {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: none;
+}
+
+.vis-item {
+    font-family: "FontAwesome";
+    font-size: 30px;
+}
+.vis-item:hover {
+    cursor: pointer;
+}
+
+.vis-item.msgtype-text:before {
+    content: "";
+}
+.vis-item.msgtype-text:hover:before {
+    content: "";
+}
+
+.vis-item.msgtype-video:before {
+    content: "";
+}
+.vis-item.msgtype-video:hover:before {
+    content: "";
+}
