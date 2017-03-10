@@ -1,61 +1,79 @@
 <html>
 <head>
     <meta charset=utf-8>
-    <title>xc-game</title>
+    <title>adventure-track</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <!-- CDN stylesheets -->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
-    <link href="node_modules/vis/dist/vis.css" rel="stylesheet" type="text/css" />
+    <link href="http://vjs.zencdn.net/5.17.0/video-js.css" rel="stylesheet">
     <link href='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet' />
+    <!-- Local stylesheets -->
+    <link href="node_modules/vis/dist/vis.css" rel="stylesheet" type="text/css" />
     <link href='custom.css' rel="stylesheet" type="text/css" />
     <style>
         body {
             margin: 0;
         }
-        .half {
-            width: 50%;
+        .leftpane {
+            position: relative;
+            float: left;
+            width: 64%;
             height: 100%;
         }
-        .left {
-            float: left;
-        }
-        .right {
+        .rightpane {
             float: right;
+            width: 36%;
+            height: 100%;
+            overflow: scroll;
         }
         /* Avoid text select on double click */
         .noselect {
             -webkit-user-select: none;
-         /* webkit (safari, chrome) browsers */
+            /* webkit (safari, chrome) browsers */
             -moz-user-select: none;
-         /* mozilla browsers */
+            /* mozilla browsers */
             -khtml-user-select: none;
-         /* webkit (konqueror) browsers */
+            /* webkit (konqueror) browsers */
             -ms-user-select: none;
-         /* IE10+ */;
+            /* IE10+ */;
         }
         #map-view {
-            height: 100%;
+            position: absolute;
+            top: 0;
+            bottom: 150px;
+            width: 100%;
+        }
+        #timeline {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
         }
     </style>
 </head>
 <body id="main">
 
 <div>
-  <div class="half left noselect">
-    <div id="map-view"></div>
-  </div>
-  <div class="half right">
-    <div id="timeline"></div>
-    <div id="blog"></div>
-  </div>
+    <div class="leftpane noselect">
+        <div id="map-view"></div>
+        <div id="timeline"></div>
+    </div>
+    <div class="rightpane">
+        <div id="blog"></div>
+    </div>
 </div>
 
 <template id="blog-template">
     <div>
         {{#messages}}
-            <div class="message" on-click="@this.select(this.id)">
-                Time: {{this.timestamp.fromNow()}}
-                Text: {{this.text}}
-            </div>
+        <div class="message" on-click="@this.select(this.id)">
+            <div class="time">{{this.timestamp.fromNow()}}</div>
+            {{#text}}
+                <div class="text">{{this.text}}</div>
+            {{/text}}
+            {{#image_versions}}
+                <img src="{{image_versions.thumb}}" />
+            {{/image_versions}}
+        </div>
         {{/messages}}
     </div>
 </template>

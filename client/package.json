@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "prewatch": "if [ -z $MAPBOX_ACCESSTOKEN ]; then echo \"Please set environment variable MAPBOX_ACCESSTOKEN!\"; fi;",
-    "watch": "TEST=true NODE_ENV=development watchify -v --debug src/main-test.js -o bundle.js -t vueify -t babelify -t envify"
+    "watch": "TEST=true NODE_ENV=development watchify -v --debug src/main-test.js -o bundle.js -t vueify -t babelify -t envify",
+    "serve": "http-server -c-1 .."
   },
   "babel": {
     "presets": [

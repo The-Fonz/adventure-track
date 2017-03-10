@@ -1,7 +1,8 @@
 import {Db} from './components/db.js';
 import {Map} from './components/map.js';
-import vis from 'vis';
 import Ractive from 'ractive';
+import forEach from 'lodash/forEach';
+import vis from 'vis';
 
 let db = new Db();
 
@@ -11,6 +12,7 @@ let ractive = new Ractive({
     el: document.getElementById('blog'),
     template: document.getElementById('blog-template').innerHTML,
     data: {
+        // Make sure that messages have an id to keep same dom elements
         messages: db.messages,
     },
     modifyArrays: true,
@@ -19,7 +21,8 @@ let ractive = new Ractive({
     },
 });
 
-db.on('newTrack', (newMsg) => {
+db.on('newTracks', () => {
+    // TODO: couple to actual tracks
     map.updateTrack();
 });
 
@@ -29,6 +32,9 @@ orientation: {axis: 'top', item: 'top'}};
 let timeline = new vis.Timeline(
     document.getElementById('timeline'), items, options);
 
-db.on('newMsg', (newMsg) => {
-    items.add(newMsg);
+db.on('newMsgs', (newMsgs) => {
+    forEach(newMsgs, m => items.add(m));
 });
+
+// Export for use in main-test
+export {db};
