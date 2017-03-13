@@ -1,25 +1,3 @@
-[
-    {
-        "id": "some-unique_id-356",
-        "athlete_id": "ab123",
-        "text": "Taking off now! Sky is looking great",
-        "timestamp": "2016-08-15T10:54:18"
-    },
-    {
-        "id": "uniqid3894",
-        "athlete_id": "ab123",
-        "image_versions": {
-            "1080": "/testdata/stjean/media/img/epic-sky-1080.jpg",
-            "720": "/testdata/stjean/media/img/epic-sky-720.jpg",
-            "360": "/testdata/stjean/media/img/epic-sky-360.jpg",
-            "thumb": "/testdata/stjean/media/img/epic-sky-thumb.jpg"
-        },
-        "timestamp": "2016-08-15T11:54:18"
-    },
-    {
-        "id": 200,
-        "athlete_id": "ab123",
-        "text": "Gonna get myself some well-deserved ice cream!",
-        "timestamp": "2016-08-15T16:54:50"
-    }
-]
+version https://git-lfs.github.com/spec/v1
+oid sha256:648690112ed17d179b115f3e15067f1186c5876911379ca924e66a88fb1806ae
+size 4122
