@@ -4,6 +4,8 @@ import vis from 'vis';
 import {Db} from './components/db.js';
 import {Map} from './components/map.js';
 
+import fade from 'ractive-transitions-fade';
+
 function widthMax(w) {
     return window.matchMedia(`(max-device-width: ${w}px)`).matches;
 }
@@ -15,6 +17,9 @@ let map = new Map('map-view');
 let blog = new Ractive({
     el: document.getElementById('blog'),
     template: document.getElementById('blog-template').innerHTML,
+    transitions: {
+        fade: fade,
+    },
     data: {
         // Make sure that messages have an id to keep same dom elements
         messages: db.messages,
@@ -28,6 +33,9 @@ let blog = new Ractive({
 let overlay = new Ractive({
     el: document.getElementById('overlay'),
     template: document.getElementById('overlay-template').innerHTML,
+    transitions: {
+        fade: fade,
+    },
     data: {
         visible: false,
         vidsrc: null,

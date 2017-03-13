@@ -27,8 +27,8 @@
 
 <template id="overlay-template">
     {{#if visible}}
-        <div class="background" on-click="@this.close()"></div>
-        <div class="overlay-modal">
+        <div fade-in class="background" on-click="@this.close()"></div>
+        <div fade-in class="overlay-modal">
             <div class="exit" on-click="@this.close()">
                 <i class="fa fa-times-circle"></i>
             </div>
@@ -47,20 +47,29 @@
 <template id="blog-template">
     <div>
         {{#messages}}
-        <div class="message" on-click="@this.select(this.id)">
-            <div class="time">
-                {{this.timestamp.calendar(null,{sameElse: 'ddd MMM Do YYYY HH:mm'})}}
+        <div fade-in="{duration: 800}" class="message" on-click="@this.select(this.id)">
+            <div class="meta">
+                <div class="time">
+                    {{this.timestamp.calendar(null,{sameElse: 'ddd MMM Do YYYY HH:mm'})}}
+                </div>
+                {{#if athlete}}
+                <div class="athlete">
+                    By: {{athlete.name}}
+                </div>
+                {{/if}}
             </div>
             {{#if text}}
                 <div class="text">{{this.text}}</div>
             {{/if}}
             {{#if image_versions}}
-                <img class="imgthumb" src="{{image_versions.thumb}}"
-                     on-click="show" />
+                <div class="imgthumbwrapper" on-click="show">
+                    <img class="imgthumb" src="{{image_versions.thumb}}" />
+                </div>
             {{/if}}
             {{#if video_versions}}
-                <img class="vidthumb" src="{{video_versions.thumb}}"
-                     on-click="show" />
+                <div class="vidthumbwrapper" on-click="show">
+                    <img class="vidthumb" src="{{video_versions.thumb}}" />
+                </div>
             {{/if}}
         </div>
         {{/messages}}

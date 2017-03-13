@@ -32,6 +32,12 @@ function runTimeSim() {
     }
 }
 
+let athDumRun = fetch('/testdata/stjean/athletes.json')
+    .then(resp => resp.json())
+    .then((dummyAthletes) => {
+        db.athlete_stream.receiveAthletes(dummyAthletes);
+    });
+
 // Have to run a http server in repo root for devdata!
 let msgDumRun = fetch('/testdata/stjean/msgs.json')
     .then(resp => resp.json())
@@ -84,12 +90,6 @@ let trackDumRun = fetch('/testdata/stjean/track.json')
             window.setTimeout(() => sendDummyTrack(), 100);
         }
         sendDummyTrack();
-    });
-
-let athDumRun = fetch('/testdata/stjean/athletes.json')
-    .then(resp => resp.json())
-    .then((dummyAthletes) => {
-        db.athlete_stream.receiveAthletes(dummyAthletes);
     });
 
 // Debugging introspection

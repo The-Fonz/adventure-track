@@ -35,6 +35,7 @@ class Db extends EventEmitter {
             // Insert at proper place, do not assume times are sequential
             forEach(newMsgs, (m) => {
                 let cleanm = this._cleanMsg(m);
+                cleanm = this._joinMsgAthlete(cleanm);
                 cleanm = this._addMsgLocation(cleanm);
                 cleanedMsgs.push(cleanm);
                 // Use inverse unix timestamp (in seconds)
@@ -95,6 +96,17 @@ class Db extends EventEmitter {
         out['className'] = 'msgtype-' + msgType;
         out.content = "";
         return out;
+    }
+
+    /**
+     * Join athlete with msg
+     */
+    _joinMsgAthlete(msg) {
+        let a = this.athletes[msg.athlete_id];
+        if (a) {
+            msg.athlete = a;
+        }
+        return msg;
     }
 
     /**

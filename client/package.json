@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "scripts": {
     "prewatch": "if [ -z $MAPBOX_ACCESSTOKEN ]; then echo \"Please set environment variable MAPBOX_ACCESSTOKEN!\"; fi;",
-    "watch": "TEST=true NODE_ENV=development watchify -v --debug src/main-test.js -o bundle.js -t vueify -t babelify -t envify",
+    "watch": "TEST=true NODE_ENV=development watchify -v --debug src/main-test.js -o bundle.js -t babelify -t envify",
+    "build": "NODE_ENV=production browserify src/main-test.js -o bundle.js -t babelify -t envify",
+    "postbuild": "uglifyjs bundle.js -o bundle.js -c",
     "serve": "http-server -c-1 .."
   },
   "babel": {
@@ -29,6 +31,7 @@
     "lodash": "^4.17.4",
     "mapbox-gl": "^0.32.1",
     "moment": "^2.17.1",
+    "ractive-transitions-fade": "^0.3.1",
     "rx": "^4.1.0",
     "rxjs": "^5.2.0",
     "stylus": "^0.54.5",

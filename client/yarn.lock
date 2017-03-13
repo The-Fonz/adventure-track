@@ -2386,6 +2386,10 @@ quote-stream@~0.0.0:
     minimist "0.0.8"
     through2 "~0.4.1"
 
+ractive-transitions-fade@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/ractive-transitions-fade/-/ractive-transitions-fade-0.3.1.tgz#205d299e6cda4637e2286198cd69f76c09e4d306"
+
 readable-stream@^2.1.5:
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.2.3.tgz#9cf49463985df016c8ae8813097a9293a9b33729"
