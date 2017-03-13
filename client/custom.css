@@ -1,32 +1,128 @@
+body {
+    margin: 0;
+    font-family: Georgia, serif;
+}
+.leftpane {
+    position: relative;
+    float: left;
+    width: 64%;
+    height: 100%;
+}
+.rightpane {
+    float: right;
+    width: 36%;
+    height: 100%;
+    overflow: scroll;
+}
+
 .vis-item.vis-line, .vis-item.vis-dot {
     visibility: hidden;
 }
 
-.vis-item.msgtype-text {
+.vis-item.msgtype-text, .vis-item.msgtype-video, .vis-item.msgtype-image {
     width: 30px;
     height: 30px;
     border: none;
     background: none;
 }
 
-.vis-item {
+.vis-item, .msg-marker {
     font-family: "FontAwesome";
     font-size: 30px;
+}
+.msg-marker {
+    font-size: 20px;
 }
 .vis-item:hover {
     cursor: pointer;
 }
 
-.vis-item.msgtype-text:before {
+.vis-item.msgtype-text:before, .msg-marker.msgtype-text:before {
     content: "";
 }
 .vis-item.msgtype-text:hover:before {
     content: "";
 }
 
-.vis-item.msgtype-video:before {
+.vis-item.msgtype-video:before, .msg-marker.msgtype-video:before {
     content: "";
 }
 .vis-item.msgtype-video:hover:before {
     content: "";
+}
+
+.vis-item.msgtype-image:before, .msg-marker.msgtype-image:before {
+    content: "";
+}
+.vis-item.msgtype-image:hover:before {
+    content: "";
+}
+
+/* Avoid text select on double click */
+.noselect {
+    -webkit-user-select: none;
+    /* webkit (safari, chrome) browsers */
+    -moz-user-select: none;
+    /* mozilla browsers */
+    -khtml-user-select: none;
+    /* webkit (konqueror) browsers */
+    -ms-user-select: none;
+    /* IE10+ */;
+}
+#map-view {
+    position: absolute;
+    top: 0;
+    bottom: 150px;
+    width: 100%;
+}
+#timeline {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+.message .imgthumb, .message .vidthumb {
+    width: 80%;
+    margin: auto;
+    cursor: pointer;
+}
+/* Show above vis.Timeline 'now' line and mapbox attribution */
+#overlay > * {
+    z-index: 9999;
+}
+#overlay .background {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0,0,0,.7);
+}
+#overlay .overlay-modal {
+    position: fixed;
+    top: 5%;
+    bottom: 5%;
+    left: 5%;
+    right: 5%;
+    background: white;
+}
+#overlay .exit {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+#overlay .exit:hover {
+    cursor: pointer;
+}
+#overlay .content {
+    padding: 5%;
+}
+#overlay video, #overlay img {
+    width: 50%;
+}
+
+.msg-marker {
+    width: 400px;
+}
+.athlete-marker {
+
 }

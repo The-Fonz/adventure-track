@@ -1,5 +1,4 @@
 import EventEmitter from 'events';
-import map from 'lodash/map';
 import clone from 'lodash/clone';
 import moment from 'moment';
 import forEach from 'lodash/forEach';
@@ -21,7 +20,7 @@ class Db extends EventEmitter {
         // Tracks by athlete id
         // {'<athlete-id>': {'coordinates': [],
         // 'timestamps': []}, ...}
-        this.tracks = [];
+        this.tracks = {};
         // Athletes by id
         // {<athlete-id>: {id: 'ab123', name: 'Dude'}, ...}
         this.athletes = {};
@@ -36,6 +35,7 @@ class Db extends EventEmitter {
             // Insert at proper place, do not assume times are sequential
             forEach(newMsgs, (m) => {
                 let cleanm = this._cleanMsg(m);
+                cleanm = this._addMsgLocation(cleanm);
                 cleanedMsgs.push(cleanm);
                 // Use inverse unix timestamp (in seconds)
                 let insertAt = sortedIndexBy(this.messages, cleanm,
@@ -49,17 +49,19 @@ class Db extends EventEmitter {
 
         this.track_stream.on('newTracks', (newTracks) => {
             forEach(newTracks, (t) => {
+                let aid = t.athlete_id;
                 // Initialize arrays if needed
-                if (this.tracks[t.id] === undefined) {
-                    this.tracks[t.id] = {coordinates: [],
+                if (this.tracks[aid] === undefined) {
+                    this.tracks[aid] = {coordinates: [],
                                          timestamps: []};
                 }
                 // Assume proper ordering, no duplicates
                 forEach(t['timestamps'], (ts) => {
-                    this.tracks[t.id]['timestamps'].push(ts);
+                    // Convert to moment object
+                    this.tracks[aid]['timestamps'].push(moment(ts));
                 });
                 forEach(t['coordinates'], (pt) => {
-                    this.tracks[t.id]['coordinates'].push(pt);
+                    this.tracks[aid]['coordinates'].push(pt);
                 });
             });
             this.emit('newTracks', newTracks);
@@ -69,7 +71,7 @@ class Db extends EventEmitter {
             forEach(newAthletes, (a) => {
                 this.athletes[a.id] = a;
             });
-            // No event emitted, should use ractive to listen to this.athletes
+            this.emit('newAthletes', newAthletes);
         });
     }
 
@@ -93,6 +95,23 @@ class Db extends EventEmitter {
         out['className'] = 'msgtype-' + msgType;
         out.content = "";
         return out;
+    }
+
+    /**
+     * Add location to message
+     */
+    _addMsgLocation(msg) {
+        // TODO: Handle case where athlete doesn't exist, and where
+        //       there is no track or no track points yet
+        // Try last track point if msg does not have its own location
+        if (msg.coordinates === undefined) {
+            let athletetrack = this.tracks[msg.athlete_id];
+            // Take last track point before msg timestamp
+            let insertAt = sortedIndexBy(athletetrack['timestamps'],
+                                        msg.timestamp);
+            msg.coordinates = athletetrack['coordinates'][insertAt-1].slice(0,2);
+        }
+        return msg;
     }
 }
 
