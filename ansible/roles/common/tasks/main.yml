@@ -18,24 +18,21 @@
     - libpq-dev
     - postgis
     - "*postgis-scripts"
+    # Needed for Crossbar
+    - libffi-dev
     # Used by ansible postgres module
     - python-psycopg2
     # Convert video, audio
     - ffmpeg
 
 - name: make virtualenv and install python3 dependencies
+  become_user: "{{USER}}"
   pip:
     name: "{{item}}"
     virtualenv: "{{USER_ROOT}}/venv"
     virtualenv_python: python3.5
   with_items:
-    - eventlet
+    - crossbar
     - psycopg2
-    - flask
-    - flask-restful
-    - flask-socketio
     - geoalchemy2
     - pytest
-    - nameko
-    - nameko-sqlalchemy
-    - kombu

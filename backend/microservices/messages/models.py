@@ -9,8 +9,11 @@ class Message(Base):
     "Message from athlete, can contain media"
     __tablename__ = 'message'
     id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime)
     user_id = Column(Integer)
+    # Time that message was created (e.g. video file time)
+    timestamp = Column(DateTime)
+    # Time that message was received by server
+    received = Column(DateTime)
     # Might be a video or voice message, so title/text can be omitted
     title = Column(Text, nullable=True)
     text = Column(Text, nullable=True)

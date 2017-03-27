@@ -7,6 +7,8 @@ from .models import Base, Message, ChatMessage
 
 
 class MessageService:
+    "Nameko service"
+
     name = "message_service"
 
     db = Session(Base)

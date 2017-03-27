@@ -2,3 +2,4 @@
   user:
     name: "{{USER}}"
     password: "{{PASSWORD}}"
+# TODO: Set home dir ownership to user? Seems not to be done by default
