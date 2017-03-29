@@ -1,0 +1,20 @@
+[Unit]
+Description=Crossbar.io
+After=network.target
+
+[Service]
+Type=simple
+User=atuser
+Group=atuser
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+# Set unbuffered python to see output from crossbar immediately (otherwise it will be buffered)
+Environment=PYTHONUNBUFFERED=true
+# Default install path if installed by root
+ExecStart=/opt/crossbar/bin/crossbar start --cbdir=/etc/defaultcrossbarnode/.crossbar
+Restart=on-abort
+Type=notify
+
+[Install]
+WantedBy=multi-user.target

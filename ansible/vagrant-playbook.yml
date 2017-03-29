@@ -22,6 +22,7 @@
   roles:
     - add_user
     - common
+    - crossbar
     - role: postgres
       dbname: atsite
     # Separate test db

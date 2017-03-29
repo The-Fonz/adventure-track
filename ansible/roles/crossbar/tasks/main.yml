@@ -1,0 +1,38 @@
+- name: add repo key
+  apt_key:
+    keyserver: hkps.pool.sks-keyservers.net
+    id: D58C6920
+
+- name: add repo
+  apt_repository:
+    repo: deb http://package.crossbar.io/ubuntu xenial main
+
+- name: install crossbar apt package
+  apt: name=crossbar update_cache=yes
+
+- name: check if crossbar node config dir exists
+  stat:
+    path: /etc/defaultcrossbarnode
+  register: defaultcrossbarnode_folder
+
+- name: crossbar node config dir
+  # Only on first install
+  when: not defaultcrossbarnode_folder.stat.exists
+  become_user: root
+  # This directory must be referenced in the service template
+  # Change ownership so atuser can run service and write PID
+  shell: /opt/crossbar/bin/crossbar init --template default --appdir /etc/defaultcrossbarnode && chown -R atuser:atuser /etc/defaultcrossbarnode
+
+- name: create crossbar service config file
+  template:
+    src: crossbar.service
+    dest: /etc/systemd/system/crossbar.service
+
+- name: run crossbar service on boot
+  systemd:
+    name: crossbar
+    # Reload config first
+    daemon_reload: yes
+    # Start on boot
+    enabled: yes
+    state: started
