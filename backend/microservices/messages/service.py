@@ -1,9 +1,4 @@
-import pytest
-from nameko.rpc import rpc
-from nameko.testing.services import worker_factory
-from nameko_sqlalchemy import Session
 
-from .models import Base, Message, ChatMessage
 
 
 class MessageService:
