@@ -1,3 +1,4 @@
+import autobahn from 'autobahn';
 import Ractive from 'ractive';
 import forEach from 'lodash/forEach';
 import vis from 'vis';
@@ -78,7 +79,7 @@ db.on('newTracks', (newTracks) => {
 
 let items = new vis.DataSet(db.messages);
 let options = {width: '100%', height: '150px',
-orientation: {axis: 'top', item: 'top'}};
+    orientation: {axis: 'top', item: 'top'}};
 let timeline = new vis.Timeline(
     document.getElementById('timeline'), items, options);
 
@@ -95,6 +96,80 @@ db.on('newAthletes', (newAthletes) => {
         map.addAthleteMarker(a);
     });
 });
+
+/*
+ * AUTOBAHN
+ */
+
+var wsuri = "ws://127.0.0.1:8080/ws";
+
+// the WAMP connection to the Router
+var connection = new autobahn.Connection({
+    url: wsuri,
+    realm: "realm1"
+});
+
+document.connection = connection;
+
+// fired when connection is established and session attached
+connection.onopen = function (session, details) {
+
+    console.log("Connected");
+
+    // SUBSCRIBE to a topic and receive events
+    //
+    function on_counter (args) {
+        var counter = args[0];
+        console.log("on_counter() event received with counter " + counter);
+    }
+    session.subscribe('com.example.oncounter', on_counter).then(
+        function (sub) {
+            console.log('subscribed to topic');
+        },
+        function (err) {
+            console.log('failed to subscribe to topic', err);
+        }
+    );
+
+    // PUBLISH an event
+    // session.publish('com.example.onhello', ['Hello from JavaScript (browser)']);
+
+    // REGISTER a procedure for remote calling
+    function mul2 (args) {
+        var x = args[0];
+        var y = args[1];
+        console.log("mul2() called with " + x + " and " + y);
+        return x * y;
+    }
+    session.register('com.example.mul2', mul2).then(
+        function (reg) {
+            console.log('procedure registered');
+        },
+        function (err) {
+            console.log('failed to register procedure', err);
+        }
+    );
+
+    // CALL a remote procedure
+    // session.call('com.example.add2', [x, 18]).then(
+    //         function (res) {
+    //             console.log("add2() result:", res);
+    //         },
+    //         function (err) {
+    //             console.log("add2() error:", err);
+    //         }
+    //     );
+};
+
+// fired when connection was lost (or could not be established)
+//
+connection.onclose = function (reason, details) {
+    console.log("Connection lost: " + reason);
+}
+
+// now actually open the connection
+//
+connection.open();
 
 // Export for use in main-test
 export {db, map, blog, overlay, timeline};
