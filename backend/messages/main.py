@@ -18,7 +18,7 @@ class MessagesComponent(ApplicationSession):
 
         def callback(*args):
             print("Callback called with args {}".format(args))
-            return 'hi'
+            return [1,2,3,4,5,6]
 
         self.register(callback, 'com.messages.getall')
 

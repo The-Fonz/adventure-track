@@ -972,6 +972,10 @@ buffer-shims@^1.0.0:
     nan "~2.5.0"
     prebuild-install "~2.1.0"
 
+bulma@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/bulma/-/bulma-0.4.0.tgz#2a0b07555d53bb4eb17861e3159e2616c21dfa6c"
+
 call-matcher@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/call-matcher/-/call-matcher-1.0.1.tgz#5134d077984f712a54dad3cbf62de28dce416ca8"
