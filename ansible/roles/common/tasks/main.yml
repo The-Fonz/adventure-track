@@ -47,3 +47,7 @@
     - cchardet
     - aiodns
     - aiohttp_jinja2
+    - asyncpg
+    - psycopg2
+    - sqlalchemy
+    - pillow

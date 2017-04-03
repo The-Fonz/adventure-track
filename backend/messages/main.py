@@ -1,5 +1,6 @@
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
+from .db import Db
 
 class MessagesComponent(ApplicationSession):
     def __init__(self, config=None):
@@ -13,14 +14,23 @@ class MessagesComponent(ApplicationSession):
     def onChallenge(self, challenge):
         print("authentication challenge received")
 
-    def onJoin(self, details):
+    async def onJoin(self, details):
         print("session joined")
 
-        def callback(*args):
-            print("Callback called with args {}".format(args))
-            return [1,2,3,4,5,6]
+        db = Db()
 
-        self.register(callback, 'com.messages.getall')
+        def fetchmsgs(user_id):
+            return db.getmsgs(user_id)
+
+        self.register(fetchmsgs, 'com.messages.fetchmsgs')
+
+        def insertmsg(msgjson):
+            # Save in db
+            pass
+
+        # register insert msg
+
+        # Publish on insert message
 
     def onLeave(self, details):
         print("session left")
