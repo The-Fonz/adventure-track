@@ -3,12 +3,13 @@ import datetime
 from os import environ
 import json
 
+import dateutil.parser
 import asyncpg
 from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, create_engine
 from sqlalchemy.dialects.postgresql import JSONB
 
 from .mediaconfig import video_resolutions, image_resolutions
-from .transcode import video_transcode, image_transcode, audio_transcode
+from .transcode import transcode
 
 metadata = MetaData()
 
@@ -67,12 +68,12 @@ class Db():
         # Set up as many queue consumers as desired
         self.num_video_queues = num_video_queues
         for i in range(num_video_queues):
-            loop.create_task(video_transcode(self.video_queue))
+            loop.create_task(transcode(self.video_queue, 'video'))
         # Image and audio should be real fast, so just use one consumer
         self.image_queue = asyncio.PriorityQueue()
-        loop.create_task(image_transcode(self.image_queue))
+        loop.create_task(transcode(self.image_queue, 'image'))
         self.audio_queue = asyncio.PriorityQueue()
-        loop.create_task(audio_transcode(self.audio_queue))
+        loop.create_task(transcode(self.audio_queue, 'audio'))
         return self
 
     async def getmsgs(self, user_id, existingconn=None):
@@ -85,17 +86,18 @@ class Db():
             self.pool.release(conn)
         return out
 
-    async def insertmsg(self, msgjson, existingconn=None):
+    async def insertmsg(self, msgjson, slicevid=[None,None], existingconn=None):
         """
         Parses msg json and inserts into db.
         Transcodes any video/image/audio.
         Yields updates so caller can notify listeners.
         """
-        user_id = msgjson['user_id']
-        timestamp = msgjson['timestamp']
         received = datetime.datetime.now()
-        title = msgjson['title']
-        text = msgjson['text']
+        user_id = msgjson['user_id']
+        timestamp = msgjson.get('timestamp', None)
+        timestamp = dateutil.parser.parse(timestamp) if timestamp else None
+        title = msgjson.get('title', None)
+        text = msgjson.get('text', None)
         video_original = msgjson.get('video_original', None)
         image_original = msgjson.get('image_original', None)
         audio_original = msgjson.get('audio_original', None)
@@ -111,12 +113,12 @@ class Db():
                 fut = asyncio.Future()
                 # Lowest res (fast encode) gets highest prio
                 print("put on q")
-                await self.video_queue.put((i, fut, res))
+                await self.video_queue.put((i, fut, video_original, res, slicevid))
                 futs.append(fut)
         if image_original:
             for i, res in enumerate(image_resolutions):
                 fut = asyncio.Future()
-                await self.image_queue.put((i, fut, res))
+                await self.image_queue.put((i, fut, image_original, res))
                 futs.append(fut)
         if audio_original:
             raise Warning("Audio transcode not implemented")
@@ -144,7 +146,7 @@ class Db():
                 # Notify listeners now that at least one media type has been added
                 # TODO: notify by yielding (async generators only available from Py3.6)
         if not existingconn:
-            self.pool.release(conn)
+            await self.pool.release(conn)
         return id
 
     async def finish_queues(self):
@@ -201,15 +203,15 @@ async def test_db_media(db):
                     'received': datetime.datetime.now(),
                     'title': 'Titre',
                     'text': 'Bodytext',
-                    'video_original': '/path/to/video',
+                    'video_original': 'testdata/stjean/media/video/greolieres-flyby.mp4',
                 }
-                id = await db.insertmsg(msgjson, existingconn=conn)
+                id = await db.insertmsg(msgjson, slicevid=[8,9], existingconn=conn)
                 msgs = await db.getmsgs(intmin, existingconn=conn)
                 print('id={}'.format(id))
                 assert len(msgs) == 1
                 msg = msgs[0]
                 print(msg)
-                assert msg['video_versions'] == {'hi': 'there'}
+                # assert msg['video_versions'] == {'hi': 'there'}
                 raise RollbackException
         except RollbackException:
             pass
@@ -222,6 +224,8 @@ if __name__=="__main__":
                         help="Create database tables")
     parser.add_argument('--test', action='store_true',
                         help="Test on real db using nested transactions")
+    parser.add_argument('--importmsgs',
+                        help="Import json file with list of messages into db")
     args = parser.parse_args()
 
     if args.create:
@@ -229,15 +233,23 @@ if __name__=="__main__":
         metadata.create_all(engine)
         print("Created tables")
 
-    if args.test:
-        import asyncio
+    if args.test or args.importmsgs:
         l = asyncio.get_event_loop()
         db = l.run_until_complete(Db.create())
         try:
-            l.run_until_complete(test_db_basics(db))
-            l.run_until_complete(test_db_media(db))
+            if args.test:
+                l.run_until_complete(test_db_basics(db))
+                l.run_until_complete(test_db_media(db))
+            elif args.importmsgs:
+                with open(args.importmsgs, 'r') as f:
+                    msgs = json.load(f)
+                if not 'y' in input("Continue loading {} messages? [y/N] ".format(len(msgs))).lower():
+                    raise Warning("Exiting...")
+                coros = [db.insertmsg(msg) for msg in msgs]
+                l.run_until_complete(asyncio.wait(coros))
+                print("Inserted all messages")
         finally:
             l.run_until_complete(db.finish_queues())
             l.run_until_complete(l.shutdown_asyncgens())
             l.close()
-        print("Tests completed successfully")
+        print("Completed successfully")

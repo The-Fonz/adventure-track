@@ -1,3 +1,107 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:648690112ed17d179b115f3e15067f1186c5876911379ca924e66a88fb1806ae
-size 4122
+[
+    {
+        "id": "uniqid802358325",
+        "user_id": 123,
+        "text": "Just arrived to this epic mountain hut! Look at that sunset.",
+        "timestamp": "2016-08-14T21:50:10",
+        "coordinates": [6.371416, 44.402716],
+        "video_original": "testdata/stjean/media/video/mountain-hut.mp4",
+        "video_versions": {
+            "1080": "/testdata/stjean/media/video/mountain-hut-1080.mp4",
+            "720": "/testdata/stjean/media/video/mountain-hut-720.mp4",
+            "360": "/testdata/stjean/media/video/mountain-hut-360.mp4",
+            "thumb": "/testdata/stjean/media/video/mountain-hut-thumb.jpg"
+        }
+    },
+    {
+        "id": "some-unique_id-356",
+        "user_id": 123,
+        "text": "Taking off now! Sky is looking great. Gonna try to make it to the mediterranean!",
+        "timestamp": "2016-08-15T10:54:18",
+        "coordinates": [6.371406, 44.398716]
+    },
+    {
+        "id": "somestring23532570",
+        "user_id": 123,
+        "timestamp": "2016-08-15T11:42:47",
+        "video_versions": {
+            "thumb": "/testdata/stjean/media/video/delta-thumb.jpg",
+            "360": "/testdata/stjean/media/video/delta-360.mp4",
+            "720": "/testdata/stjean/media/video/delta-720.mp4",
+            "1080": "/testdata/stjean/media/video/delta-1080.mp4"
+        }
+    },
+    {
+        "id": "uniqid3894",
+        "user_id": 123,
+        "image_versions": {
+            "1080": "/testdata/stjean/media/img/epic-sky-1080.jpg",
+            "720": "/testdata/stjean/media/img/epic-sky-720.jpg",
+            "thumb": "/testdata/stjean/media/img/epic-sky-thumb.jpg"
+        },
+        "timestamp": "2016-08-15T12:29:48"
+    },
+    {
+        "id": "asdfok51252",
+        "user_id": 123,
+        "timestamp": "2016-08-15T13:32:51",
+        "video_versions": {
+            "thumb": "/testdata/stjean/media/video/glider-thumb.jpg",
+            "360": "/testdata/stjean/media/video/glider-360.mp4",
+            "720": "/testdata/stjean/media/video/glider-720.mp4",
+            "1080": "/testdata/stjean/media/video/glider-1080.mp4"
+        }
+    },
+    {
+        "id": "uniqid124214",
+        "user_id": 123,
+        "timestamp": "2016-08-15T13:45:18",
+        "text": "Trapped in valley wind on this low ridge, chasing some vultures in hope of lift!",
+        "video_versions": {
+            "thumb": "/testdata/stjean/media/video/vultures-thumb.jpg",
+            "360": "/testdata/stjean/media/video/vultures-360.mp4",
+            "720": "/testdata/stjean/media/video/vultures-720.mp4",
+            "1080": "/testdata/stjean/media/video/vultures-1080.mp4"
+        }
+    },
+    {
+        "id": "asdkliqtypzc",
+        "user_id": 123,
+        "timestamp": "2016-08-15T14:42:12",
+        "text": "Managed to climb up to 3000m in smooth evening lift!",
+        "image_versions": {
+            "thumb": "/testdata/stjean/media/img/smoothlift-thumb.jpg",
+            "720": "/testdata/stjean/media/img/smoothlift-720.jpg",
+            "1080": "/testdata/stjean/media/img/smoothlift-1080.jpg"
+        }
+    },
+    {
+        "id": "12426423432",
+        "user_id": 123,
+        "timestamp": "2016-08-15T15:11:51",
+        "text": "The sea!",
+        "image_versions": {
+            "thumb": "/testdata/stjean/media/img/greolieres-thumb.jpg",
+            "720": "/testdata/stjean/media/img/greolieres-720.jpg",
+            "1080": "/testdata/stjean/media/img/greolieres-1080.jpg"
+        }
+    },
+    {
+        "id": "un1204125908",
+        "user_id": 123,
+        "timestamp": "2016-08-15T16:22:42",
+        "text": "Flying by Greolières takeoff. Smile and wave!",
+        "video_versions": {
+            "thumb": "/testdata/stjean/media/video/greolieres-flyby-thumb.jpg",
+            "720": "/testdata/stjean/media/video/greolieres-flyby-720.mp4",
+            "1080": "/testdata/stjean/media/video/greolieres-flyby-1080.mp4",
+            "360": "/testdata/stjean/media/video/greolieres-flyby-360.mp4"
+        }
+    },
+    {
+        "id": 200,
+        "user_id": 123,
+        "text": "Gonna get myself some well-deserved ice cream!",
+        "timestamp": "2016-08-15T16:54:50"
+    }
+]

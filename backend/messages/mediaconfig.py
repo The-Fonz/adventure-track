@@ -1,15 +1,16 @@
-video_resolutions = {
+video_resolutions = [
     # Priority ordering: first one gets encoded, then the rest
-    '360': [640, 360],
-    '720': [1280, 720],
-    '1080': [1920, 1080],
-}
+    {'type': 'thumb', 'wh': [640, 360]},
+    {'type': '360', 'wh': [640, 360]},
+    {'type': '720', 'wh': [1280, 720]},
+    {'type': '1080', 'wh': [1920, 1080]},
+]
 
-image_resolutions = {
+image_resolutions = [
     # For display in list
-    'thumb': [640, 480],
+    {'type': 'thumb', 'wh': [640, 480]},
     # Half-screen
-    '720': [1280, 720],
+    {'type': '720', 'wh': [1280, 720]},
     # For fullscreen use
-    '1080': [1920, 1080],
-}
+    {'type': '1080', 'wh': [1920, 1080]},
+]
