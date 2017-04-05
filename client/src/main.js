@@ -116,6 +116,12 @@ connection.onopen = function (session, details) {
 
     console.log("Connected");
 
+    let uid = Number(window.location.pathname.split('/')[2]);
+
+    session.call('com.messages.fetchmsgs', [uid]).then((res)=>{
+            db.msg_stream.receiveMsgs(res);
+        });
+
     // SUBSCRIBE to a topic and receive events
     //
     function on_counter (args) {

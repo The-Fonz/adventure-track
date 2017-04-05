@@ -1,3 +1,4 @@
+import logging
 import asyncio
 import datetime
 from os import environ
@@ -10,6 +11,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from .mediaconfig import video_resolutions, image_resolutions
 from .transcode import transcode
+
+logger = logging.getLogger('messages.db')
 
 metadata = MetaData()
 
@@ -49,6 +52,9 @@ async def record_to_json(records):
             # Parse jsonb if not empty
             if v and k in set(('video_versions', 'image_versions', 'audio_versions')):
                 v = json.loads(v)
+            # Datetime objs are not json serializable
+            elif type(v) == datetime.datetime:
+                v = v.isoformat()
             recdict[k] = v
         out.append(recdict)
     return out
@@ -83,7 +89,7 @@ class Db():
         out = await record_to_json(recs)
         # Release acquired connection
         if not existingconn:
-            self.pool.release(conn)
+            await self.pool.release(conn)
         return out
 
     async def insertmsg(self, msgjson, slicevid=[None,None], existingconn=None):
@@ -112,7 +118,7 @@ class Db():
             for i, res in enumerate(video_resolutions):
                 fut = asyncio.Future()
                 # Lowest res (fast encode) gets highest prio
-                print("put on q")
+                logger.info("put on q")
                 await self.video_queue.put((i, fut, video_original, res, slicevid))
                 futs.append(fut)
         if image_original:
@@ -126,7 +132,7 @@ class Db():
 
         if futs:
             for fut in asyncio.as_completed(futs):
-                print("await fut")
+                logger.info("await fut")
                 res = await fut
                 # Future's result is set to json describing transcode outcome
                 mediav = "{}_versions".format(res['mediatype'])
@@ -155,7 +161,7 @@ class Db():
             await self.video_queue.put((float('inf'), None))
         await self.image_queue.put((float('inf'),None))
         await self.audio_queue.put((float('inf'),None))
-        print("Waiting for transcode queues to empty...")
+        logger.info("Waiting for transcode queues to empty...")
         asyncio.wait([self.video_queue,
                       self.image_queue,
                       self.audio_queue])
@@ -177,13 +183,13 @@ async def test_db_basics(db):
                 assert msgs == []
                 msgjson = {
                     'user_id': intmin,
-                    'timestamp': datetime.datetime.now(),
-                    'received': datetime.datetime.now(),
+                    'timestamp': datetime.datetime.now().isoformat(),
+                    'received': datetime.datetime.now().isoformat(),
                     'title': 'Titre',
                     'text': 'Bodytext'}
                 id = await db.insertmsg(msgjson, existingconn=conn)
                 msgs = await db.getmsgs(intmin, existingconn=conn)
-                print('id={}'.format(id))
+                logger.info('id={}'.format(id))
                 assert len(msgs) == 1
                 assert msgs[0]['title'] == 'Titre'
                 # Roll back transaction
@@ -199,18 +205,18 @@ async def test_db_media(db):
             async with conn.transaction():
                 msgjson = {
                     'user_id': intmin,
-                    'timestamp': datetime.datetime.now(),
-                    'received': datetime.datetime.now(),
+                    'timestamp': datetime.datetime.now().isoformat(),
+                    'received': datetime.datetime.now().isoformat(),
                     'title': 'Titre',
                     'text': 'Bodytext',
                     'video_original': 'testdata/stjean/media/video/greolieres-flyby.mp4',
                 }
                 id = await db.insertmsg(msgjson, slicevid=[8,9], existingconn=conn)
                 msgs = await db.getmsgs(intmin, existingconn=conn)
-                print('id={}'.format(id))
+                logger.info('id={}'.format(id))
                 assert len(msgs) == 1
                 msg = msgs[0]
-                print(msg)
+                logger.info(msg)
                 # assert msg['video_versions'] == {'hi': 'there'}
                 raise RollbackException
         except RollbackException:
@@ -218,6 +224,12 @@ async def test_db_media(db):
 
 
 if __name__=="__main__":
+    # Nice output when run on cmdline
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(levelname)7s: %(message)s'
+    )
+
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--create', action='store_true',
@@ -231,7 +243,7 @@ if __name__=="__main__":
     if args.create:
         engine = create_engine(environ["DB_URI_ATSITE"])
         metadata.create_all(engine)
-        print("Created tables")
+        logger.info("Created tables")
 
     if args.test or args.importmsgs:
         l = asyncio.get_event_loop()
@@ -247,9 +259,9 @@ if __name__=="__main__":
                     raise Warning("Exiting...")
                 coros = [db.insertmsg(msg) for msg in msgs]
                 l.run_until_complete(asyncio.wait(coros))
-                print("Inserted all messages")
+                logger.info("Inserted all messages")
         finally:
             l.run_until_complete(db.finish_queues())
             l.run_until_complete(l.shutdown_asyncgens())
             l.close()
-        print("Completed successfully")
+        logger.info("Completed successfully")

@@ -1,0 +1,29 @@
+- name: install supervisord
+  apt: name=supervisor state=present
+
+- name: copy supervisord config file
+  tags: ['supervisord', 'config']
+  template:
+    src: adventure-track-supervisord.conf
+    dest: /etc/supervisor/conf.d/adventure-track-supervisord.conf
+
+- name: replace supervisor systemd service config
+  tags: ['supervisord', 'systemd']
+  template:
+    src: supervisor.service
+    # Takes precedence over /lib/systemd/...
+    dest: /etc/systemd/system/supervisor.service
+
+- name: make log dirs
+  tags: ['supervisord']
+  file:
+    path: /home/atuser/log
+    state: directory
+
+- name: daemonize supervisord
+  systemd:
+    name: supervisor
+    # Load changed config
+    daemon_reload: yes
+    enabled: yes
+    state: started

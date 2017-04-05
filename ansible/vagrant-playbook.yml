@@ -25,6 +25,7 @@
     - crossbar
     - role: postgres
       dbname: atsite
+    - supervisord
     # Separate test db
 #    - role: postgres
 #      dbname: attestdb

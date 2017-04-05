@@ -47,27 +47,27 @@ class Map extends EventEmitter {
     }
     updateTracks(newTracks) {
         for (let track of newTracks) {
-            let srcname = `source-athleteid-${track.athlete_id}`;
+            let srcname = `source-athleteid-${track.user_id}`;
             let src = this.map.getSource(srcname);
             let lastpt = [0,0];
             // Update if exists
             if (src) {
                 forEach(track.coordinates, (pt)=>{
                     lastpt = pt.slice(0,2);
-                    this.geojsons[track.athlete_id].geometry.coordinates.push(lastpt);
+                    this.geojsons[track.user_id].geometry.coordinates.push(lastpt);
                 });
                 this._flyTo(lastpt);
                 // Update athlete marker position
-                let am = this.athleteMarkers[track.athlete_id];
+                let am = this.athleteMarkers[track.user_id];
                 if (am) {
                     am.setLngLat(lastpt);
                 }
-                src.setData(this.geojsons[track.athlete_id]);
+                src.setData(this.geojsons[track.user_id]);
             } else {
                 this.map.setCenter(track.coordinates[0].slice(0,2));
                 // Create if not exists
-                this.geojsons[track.athlete_id] = geojsonLine([]).data;
-                this.addTrack(track.athlete_id, geojsonLine([[0,0],[1,1]]));
+                this.geojsons[track.user_id] = geojsonLine([]).data;
+                this.addTrack(track.user_id, geojsonLine([[0,0],[1,1]]));
             }
         }
     }

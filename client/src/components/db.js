@@ -26,7 +26,7 @@ class Db extends EventEmitter {
         this.athletes = {};
         // *Inversely* chronologically ordered list of messages,
         // so newest first (easy rendering), sorted at all times
-        // [{athlete_id: 'ab123', id: 'msgid1239214', text: 'Hi there!',
+        // [{user_id: 'ab123', id: 'msgid1239214', text: 'Hi there!',
         //   timestamp: "2017-03-07T20:58:12"}, ...]
         this.messages = [];
 
@@ -50,7 +50,7 @@ class Db extends EventEmitter {
 
         this.track_stream.on('newTracks', (newTracks) => {
             forEach(newTracks, (t) => {
-                let aid = t.athlete_id;
+                let aid = t.user_id;
                 // Initialize arrays if needed
                 if (this.tracks[aid] === undefined) {
                     this.tracks[aid] = {coordinates: [],
@@ -102,7 +102,7 @@ class Db extends EventEmitter {
      * Join athlete with msg
      */
     _joinMsgAthlete(msg) {
-        let a = this.athletes[msg.athlete_id];
+        let a = this.athletes[msg.user_id];
         if (a) {
             msg.athlete = a;
         }
@@ -117,7 +117,11 @@ class Db extends EventEmitter {
         //       there is no track or no track points yet
         // Try last track point if msg does not have its own location
         if (msg.coordinates === undefined) {
-            let athletetrack = this.tracks[msg.athlete_id];
+            let athletetrack = this.tracks[msg.user_id];
+            // TODO: Refine handling no track points
+            if (athletetrack === undefined) {
+                return msg;
+            }
             // Take last track point before msg timestamp
             let insertAt = sortedIndexBy(athletetrack['timestamps'],
                                         msg.timestamp);
