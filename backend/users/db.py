@@ -3,7 +3,6 @@ import asyncio
 import datetime
 from os import environ
 import json
-import uuid
 
 import dateutil.parser
 import asyncpg
