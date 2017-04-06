@@ -4,10 +4,14 @@ import asyncio.subprocess
 
 from PIL import Image
 
+from ..utils import getLogger
+
+logger = getLogger('messages.transcode')
+
 
 async def run(cmd):
     "Run a subprocess as coroutine"
-    print("Running command > {}".format(cmd))
+    logger.info("Running command > {}".format(cmd))
     # TODO: Use asyncio.wait_for to specify a timeout
     proc = await asyncio.create_subprocess_exec(
         *cmd.split(),

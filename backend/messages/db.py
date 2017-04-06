@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from .mediaconfig import video_resolutions, image_resolutions
 from .transcode import transcode
-from ..utils import records_to_json
+from ..utils import record_to_json, records_to_json
 
 logger = logging.getLogger('messages.db')
 
@@ -65,6 +65,14 @@ class Db():
         loop.create_task(transcode(db.audio_queue, 'audio'))
         return db
 
+    async def getmsg(self, msg_id, existingconn=None):
+        conn = existingconn or await self.pool.acquire()
+        msg = await conn.fetchrow('SELECT * FROM message WHERE id=$1', msg_id)
+        out = await record_to_json(msg)
+        if not existingconn:
+            await self.pool.release(conn)
+        return out
+
     async def getmsgs(self, user_id, existingconn=None):
         # Allow passing in an existing connection for unittesting
         conn = existingconn or await self.pool.acquire()
@@ -75,7 +83,7 @@ class Db():
             await self.pool.release(conn)
         return out
 
-    async def insertmsg(self, msgjson, slicevid=[None,None], existingconn=None):
+    async def insertmsg(self, msgjson, updatequeue=None, slicevid=[None,None], existingconn=None):
         """
         Parses msg json and inserts into db.
         Transcodes any video/image/audio.
@@ -103,7 +111,7 @@ class Db():
             for i, res in enumerate(video_resolutions):
                 fut = asyncio.Future()
                 # Lowest res (fast encode) gets highest prio
-                logger.info("put on q")
+                logger.debug("put on q")
                 await self.video_queue.put((i, fut, video_original, res, slicevid))
                 futs.append(fut)
         if image_original:
@@ -117,7 +125,7 @@ class Db():
 
         if futs:
             for fut in asyncio.as_completed(futs):
-                logger.info("await fut")
+                logger.debug("await fut")
                 res = await fut
                 # Future's result is set to json describing transcode outcome
                 mediav = "{}_versions".format(res['mediatype'])
@@ -134,11 +142,17 @@ class Db():
                 await conn.execute(
                 "UPDATE message SET "+mediav+"=$2::jsonb WHERE id=$1"
                 , id, json.dumps(versions))
-                # Notify listeners now that at least one media type has been added
-                # TODO: notify by yielding (async generators only available from Py3.6)
+                # Notify any listeners
+                if updatequeue:
+                    updatequeue.put(await self.getmsg(id))
+        if updatequeue:
+            # Might be double, but at least we send an update if transcoding futures fail
+            updatequeue.put(await self.getmsg(id))
+            # Stop signal
+            updatequeue.put(None)
         if not existingconn:
             await self.pool.release(conn)
-        return id
+        # Return nothing, need to pass an updatequeue to listen to updates
 
     async def finish_queues(self):
         # Send stop signal as lowest prio
@@ -172,9 +186,8 @@ async def test_db_basics(db):
                     'received': datetime.datetime.now().isoformat(),
                     'title': 'Titre',
                     'text': 'Bodytext'}
-                id = await db.insertmsg(msgjson, existingconn=conn)
+                await db.insertmsg(msgjson, existingconn=conn)
                 msgs = await db.getmsgs(intmin, existingconn=conn)
-                logger.info('id={}'.format(id))
                 assert len(msgs) == 1
                 assert msgs[0]['title'] == 'Titre'
                 # Roll back transaction
@@ -196,12 +209,11 @@ async def test_db_media(db):
                     'text': 'Bodytext',
                     'video_original': 'testdata/stjean/media/video/greolieres-flyby.mp4',
                 }
-                id = await db.insertmsg(msgjson, slicevid=[8,9], existingconn=conn)
+                await db.insertmsg(msgjson, slicevid=[8,9], existingconn=conn)
                 msgs = await db.getmsgs(intmin, existingconn=conn)
-                logger.info('id={}'.format(id))
                 assert len(msgs) == 1
                 msg = msgs[0]
-                logger.info(msg)
+                logger.debug(msg)
                 # assert msg['video_versions'] == {'hi': 'there'}
                 raise RollbackException
         except RollbackException:

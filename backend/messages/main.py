@@ -28,18 +28,37 @@ class MessagesComponent(ApplicationSession):
         self.db = db
 
         async def fetchmsgs(user_id_hash):
-            user_id = await self.call('at.users.getuser_hash_id', user_id_hash)
+            user_id = await self.call('at.users.get_user_id_by_hash', user_id_hash)
             return await db.getmsgs(user_id)
 
         self.register(fetchmsgs, 'at.messages.fetchmsgs')
 
-        def insertmsg(msgjson):
-            # Save in db
-            pass
+        async def insertmsg(msgjson):
+            q = asyncio.Queue()
+            # Run while continuing this coroutine
+            asyncio.ensure_future(db.insertmsg(msgjson, updatequeue=q))
+            # Emit any updates caused by media rendering finishing
+            user_id_hash = None
+            first = True
+            while True:
+                update = await q.get()
+                # Stop signal
+                if update == None:
+                    break
+                # Do this only once, updates are for only one user
+                if not user_id_hash:
+                    user_id_hash = await self.call('at.users.get_user_hash_by_id')
+                # Emit event on channel at.messages.user.<id_hash>
+                userchannel = 'at.messages.user.{}'.format(user_id_hash)
+                await self.publish(userchannel, update)
+                first = False
+            if first:
+                # Need to fail so WAMP caller gets notified
+                # TODO: Return to caller on first update?
+                # TODO: Find out if this crashes process or not
+                raise Warning("No update received for message %s", msgjson)
 
-        # register insert msg
-
-        # Publish on insert message
+        self.register(insertmsg, 'at.messages.insertmsg')
 
     # def onLeave(self, details):
     #     logger.info("session left")
