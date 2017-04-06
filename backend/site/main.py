@@ -41,12 +41,12 @@ async def site_factory(wampsess):
     async def trackuser(request):
         user_id_hash = request.match_info.get('user_id_hash')
         try:
-            user = await wampsess.call('at.users.getuser_hash', user_id_hash)
+            user = await wampsess.call('at.users.get_user_by_hash', user_id_hash)
             if not user:
                 # Proper escaping done in template
                 return errpage(request, "User {} does not exist".format(user_id_hash), 404)
         except ApplicationError:
-            logger.exception("Could not reach at.users.getuser_hash")
+            logger.exception("Could not reach at.users.get_user_by_hash")
             return errpage(request, "Could not reach user service", 500)
         context = {'user': user}
         response = aiohttp_jinja2.render_template('trackuser.html', request, context)

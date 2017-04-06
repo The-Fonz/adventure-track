@@ -5,11 +5,12 @@ from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
 from .db import Db
 from ..utils import getLogger
+from .bot import main as bot_main
 
-logger = getLogger('users.main')
+logger = getLogger('telegrambot.main')
 
 
-class UsersComponent(ApplicationSession):
+class TelegramComponent(ApplicationSession):
     def __init__(self, config=None):
         ApplicationSession.__init__(self, config)
         logger.info("component created")
@@ -20,27 +21,11 @@ class UsersComponent(ApplicationSession):
     async def onJoin(self, details):
         logger.info("session joined")
 
-        db = await Db.create()
-        self.db = db
+        self.db = await Db.create()
 
-        async def get_user_by_hash(user_id_hash):
-            return await db.getuser(user_id_hash)
-
-        async def get_user_id_by_hash(user_id_hash):
-            "Returns only numeric user id"
-            return await db.getuser_id(user_id_hash)
-
-        async def get_user_hash_by_id(user_id):
-            "Returns user hash"
-            return await db.getuser_hash(user_id)
-
-        async def check_user_authcode(user_id_hash, user_auth_code):
-            return await db.check_auth(user_id_hash, user_auth_code)
-
-        self.register(get_user_by_hash, 'at.users.get_user_by_hash')
-        self.register(get_user_id_by_hash, 'at.users.get_user_id_by_hash')
-        self.register(get_user_id_by_hash, 'at.users.get_user_hash_by_id')
-        self.register(check_user_authcode, 'at.users.check_user_authcode')
+        # Create and run bot
+        bot_main(self, asyncio.get_event_loop())
+        logger.info("bot is running")
 
 
 if __name__=="__main__":
@@ -48,7 +33,7 @@ if __name__=="__main__":
     l = asyncio.get_event_loop()
 
     runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
-    protocol = runner.run(UsersComponent, start_loop=False)
+    protocol = runner.run(TelegramComponent, start_loop=False)
 
     l.add_signal_handler(signal.SIGINT, l.stop)
     l.add_signal_handler(signal.SIGTERM, l.stop)

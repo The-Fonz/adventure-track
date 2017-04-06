@@ -53,3 +53,4 @@
     - pillow
     - python-dateutil
     - hashids
+    - python-telegram-bot

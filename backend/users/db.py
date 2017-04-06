@@ -3,15 +3,16 @@ import asyncio
 import datetime
 from os import environ
 import json
+import uuid
 
 import dateutil.parser
 import asyncpg
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, Text, create_engine
-from sqlalchemy.dialects.postgresql import JSONB, CHAR
+from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, create_engine
+from sqlalchemy.dialects.postgresql import CHAR
 
-from ..utils import record_to_json, friendlyhash
+from ..utils import record_to_json, friendlyhash, getLogger, friendly_auth_code
 
-logger = logging.getLogger('users.db')
+logger = getLogger('users.db')
 
 metadata = MetaData()
 
@@ -27,6 +28,9 @@ message = Table('users', metadata,
     Column('last_name', String(255), nullable=True),
     Column('email', String(255), nullable=True),
     Column('telephone_mobile', String(255), nullable=True),
+    # Auth token for authentication, should be used together with id_hash
+    # Take care not to expose it!
+    Column('auth_code', CHAR(8), nullable=True)
 )
 
 
@@ -38,12 +42,33 @@ class Db():
         db.pool = await asyncpg.create_pool(dsn=environ["DB_URI_ATSITE"])
         return db
 
-    async def getuser(self, id_hash, existingconn=None):
+    async def check_auth(self, id_hash, auth_code, existingconn=None):
+        "Returns *False* if auth_code wrong, *True* if right, and *None* if user not found"
         conn = existingconn or await self.pool.acquire()
-        user = await conn.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
+        out = False
+        user = await conn.fetchrow('SELECT id, auth_code FROM users WHERE id_hash=$1', id_hash)
+        if user:
+            # Strip out any whitespace
+            if auth_code.strip() == user['auth_code'].strip():
+                out = True
+        else:
+            out = None
         if not existingconn:
             await self.pool.release(conn)
-        return await record_to_json(user)
+        return out
+
+
+    async def getuser(self, id_hash, pass_auth_code=False, existingconn=None):
+        "Get user in json format. Should never pass auth token, just for testing"
+        conn = existingconn or await self.pool.acquire()
+        user = await conn.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
+        if not user:
+            return None
+        if not existingconn:
+            await self.pool.release(conn)
+        # Take care to make it a tuple to prevent making a set of letters
+        exclude = set(('auth_code',)) if not pass_auth_code else set()
+        return await record_to_json(user, exclude=exclude)
 
     async def getuser_id(self, id_hash, existingconn=None):
         conn = existingconn or await self.pool.acquire()
@@ -52,12 +77,22 @@ class Db():
             await self.pool.release(conn)
         return user_id
 
+    async def getuser_hash(self, id, existingconn=None):
+        conn = existingconn or await self.pool.acquire()
+        user_id_hash = await conn.fetchval('SELECT id_hash FROM users WHERE id=$1', id)
+        if not existingconn:
+            await self.pool.release(conn)
+        return user_id_hash
+
     async def insertuser(self, userjson, id_hash=None, id_hash_collision_retry=False, existingconn=None):
         "Make new user based on json representation"
         conn = existingconn or await self.pool.acquire()
         u = dict()
-        u['id_hash'] = id_hash or await friendlyhash()
         created = userjson.get('created', datetime.datetime.now())
+        # URL-friendly and incremented-db-id-confuscating alphanumeric string identifier
+        u['id_hash'] = id_hash or await friendlyhash()
+        # Use in e.g. telegram user linking
+        u['auth_code'] = await friendly_auth_code()
         # Parse if ISO string time
         u['created'] = created if type(created) == datetime.datetime else dateutil.parser.parse(created)
         u['first_name'] = userjson.get('first_name')
@@ -66,9 +101,9 @@ class Db():
         u['telephone_mobile'] = userjson.get('telephone_mobile')
         async def ins(u):
             return await conn.fetchval('''
-            INSERT INTO users (id, id_hash, created, first_name, last_name, email, telephone_mobile)
-            VALUES (DEFAULT, $1, $2, $3, $4, $5, $6) RETURNING id
-            ''', u['id_hash'], u['created'], u['first_name'], u['last_name'], u['email'], u['telephone_mobile'])
+            INSERT INTO users (id, id_hash, created, first_name, last_name, email, telephone_mobile, auth_code)
+            VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, $7) RETURNING id
+            ''', u['id_hash'], u['created'], u['first_name'], u['last_name'], u['email'], u['telephone_mobile'], u['auth_code'])
         # We need to handle friendly hash collisions
         for i in range(100):
             if i == 99:
@@ -111,8 +146,11 @@ async def test_db_basics(db):
                     'telephone_mobile': '023535-1029213890'
                 }
                 await db.insertuser(user_1, id_hash=fh, existingconn=conn)
-                u = await db.getuser(fh, existingconn=conn)
+                u = await db.getuser(fh, pass_auth_code=True, existingconn=conn)
                 assert u['first_name'] == "Fonz"
+                assert len(u['auth_code']) == 5
+                u = await db.getuser(fh, existingconn=conn)
+                assert u.get('auth_code', -1) == -1
                 # Insert identical id_hash with retry
                 await db.insertuser(user_1, id_hash=fh, id_hash_collision_retry=True, existingconn=conn)
                 # Insert identical id_hash

@@ -118,24 +118,18 @@ connection.onopen = function (session, details) {
 
     let uid = window.location.pathname.split('/')[2];
 
-    session.call('at.messages.fetchmsgs', [uid]).then((res)=>{
-            db.msg_stream.receiveMsgs(res);
-        });
-
-    // SUBSCRIBE to a topic and receive events
-    //
-    function on_counter (args) {
-        var counter = args[0];
-        console.log("on_counter() event received with counter " + counter);
+    function receiveMsgHandler(msgs) {
+        db.msg_stream.receiveMsgs(msgs);
     }
-    session.subscribe('com.example.oncounter', on_counter).then(
-        function (sub) {
-            console.log('subscribed to topic');
-        },
-        function (err) {
-            console.log('failed to subscribe to topic', err);
-        }
+
+    session.call('at.messages.fetchmsgs', [uid]).then(receiveMsgHandler);
+
+    // Unpack list of args
+    session.subscribe(`at.messages.user.${uid}`, args => receiveMsgHandler(args[0])).then(
+        sub => console.log('subscribed to topic'),
+        err => console.error('failed to subscribe')
     );
+
 
     // PUBLISH an event
     // session.publish('com.example.onhello', ['Hello from JavaScript (browser)']);
