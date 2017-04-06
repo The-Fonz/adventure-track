@@ -1,10 +1,7 @@
-There are many amazing adventurers that do incredible things, yet cannot communicate these effectively to their followers. Let's change that, let's take people along for a ride.
+There are many amazing adventurers that do incredible things, yet cannot communicate these effectively to their followers. Let's change that.
 
 A related issue is that it is hard to attract big sponsors to sailplane and paragliding races because they're not very spectator-friendly. Let's change that too and bring gliding, hanggliding and paragliding to the Olympics!
 
-Here's some random lyric for inspiration.
-
-*Come along and you´ll see... what it's like to be free* Come Along - Titiyo
 
 ## Idea
 These are some untested ideas. Someone should go out into the field and find out if this is what people want.
@@ -28,11 +25,9 @@ To present the data and enable interaction, we can use four widgets:
 These can be presented in different layouts depending on device.
 
 ## System architecture
-I've come up with a microservice-based architecture, where each service encapsulates a specific set of functionality and has its own data store. Any service can expose a HTTP REST API and/or a redis pub/sub channel (for updates). Long-running tasks can be outsourced to[redis-queue](python-rq.org). To get the media into the system, [Telegram](telegram.org) is ideal as it supports all mobile platforms and has extensive APIs. It does require some fiddling when using it in-flight, but saves us from natively implementing things like video recording, transcoding, and uploading.
+I've come up with a microservice-based architecture, where each service encapsulates a specific set of functionality and has its own data store. They use [WAMP](wamp.ws) to communicate in RPC or pub/sub style, which has the additional advantage of a javascript client. That enables the browser to directly talk to the microservices, without an additional API layer. The central WAMP message broker used is [Crossbar](crossbar.io). To get the media into the system, [Telegram](telegram.org) is ideal as it supports all mobile platforms and has extensive APIs. It does require some fiddling when using it in-flight, but saves us from natively implementing things like video recording, transcoding, and uploading.
 
-Here's the full diagram:
-
-![System architecture](https://raw.githubusercontent.com/The-Fonz/come-along/master/system-diagram.png)
+TODO: Make new diagram.
 
 ## Client implementation and requirements
 Here's some requirements mixed with implementation details. *MSG_CLICK* is a pub/sub event.

@@ -1,0 +1,32 @@
+{% extends "base-with-nav.html" %}
+
+{% block head %}
+{{super()}}
+<style>
+    .status_code, .status_text, .prep {
+        width: 100%;
+        margin: .5em 0;
+        text-align: center;
+    }
+    .prep {
+        font-size: 1.8em;
+        color: gray;
+        margin-top: 1em;
+    }
+    .status_code {
+        color: red;
+        font-size: 3em;
+    }
+    .status_text {
+        color: black;
+        font-size: 2em;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="status_code">{{status_code|e}}</div>
+{# Escape to avoid any url parameters leaking #}
+<div class="status_text">{{status_text|e}}</div>
+<div class="prep">Oops, an error occurred! We've been notified.</div>
+{% endblock %}

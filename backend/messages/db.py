@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from .mediaconfig import video_resolutions, image_resolutions
 from .transcode import transcode
+from ..utils import records_to_json
 
 logger = logging.getLogger('messages.db')
 
@@ -42,51 +43,33 @@ message = Table('message', metadata,
 )
 
 
-async def record_to_json(records):
-    "Converts list of asyncpg.Record to json"
-    out = []
-    # Can make async using await asyncio.sleep(0) but should be real fast
-    for r in records:
-        recdict = {}
-        for k,v in r.items():
-            # Parse jsonb if not empty
-            if v and k in set(('video_versions', 'image_versions', 'audio_versions')):
-                v = json.loads(v)
-            # Datetime objs are not json serializable
-            elif type(v) == datetime.datetime:
-                v = v.isoformat()
-            recdict[k] = v
-        out.append(recdict)
-    return out
-
-
 class Db():
     @classmethod
-    async def create(self, loop=None, num_video_queues=2):
+    async def create(cls, loop=None, num_video_queues=2):
         "Use like `await Db.create()` to enable use of async methods"
-        self = Db()
-        self.pool = await asyncpg.create_pool(dsn=environ["DB_URI_ATSITE"])
+        db = Db()
+        db.pool = await asyncpg.create_pool(dsn=environ["DB_URI_ATSITE"])
         # Set up transcoding consumers
         if not loop:
             loop = asyncio.get_event_loop()
         # Priority queue enables processing low-quality first
-        self.video_queue = asyncio.PriorityQueue()
+        db.video_queue = asyncio.PriorityQueue()
         # Set up as many queue consumers as desired
-        self.num_video_queues = num_video_queues
+        db.num_video_queues = num_video_queues
         for i in range(num_video_queues):
-            loop.create_task(transcode(self.video_queue, 'video'))
+            loop.create_task(transcode(db.video_queue, 'video'))
         # Image and audio should be real fast, so just use one consumer
-        self.image_queue = asyncio.PriorityQueue()
-        loop.create_task(transcode(self.image_queue, 'image'))
-        self.audio_queue = asyncio.PriorityQueue()
-        loop.create_task(transcode(self.audio_queue, 'audio'))
-        return self
+        db.image_queue = asyncio.PriorityQueue()
+        loop.create_task(transcode(db.image_queue, 'image'))
+        db.audio_queue = asyncio.PriorityQueue()
+        loop.create_task(transcode(db.audio_queue, 'audio'))
+        return db
 
     async def getmsgs(self, user_id, existingconn=None):
         # Allow passing in an existing connection for unittesting
         conn = existingconn or await self.pool.acquire()
         recs = await conn.fetch('SELECT * FROM message WHERE user_id=$1', user_id)
-        out = await record_to_json(recs)
+        out = await records_to_json(recs)
         # Release acquired connection
         if not existingconn:
             await self.pool.release(conn)
@@ -101,7 +84,9 @@ class Db():
         received = datetime.datetime.now()
         user_id = msgjson['user_id']
         timestamp = msgjson.get('timestamp', None)
-        timestamp = dateutil.parser.parse(timestamp) if timestamp else None
+        if timestamp:
+
+            timestamp = timestamp if type(timestamp) == datetime.datetime else dateutil.parser.parse(timestamp)
         title = msgjson.get('title', None)
         text = msgjson.get('text', None)
         video_original = msgjson.get('video_original', None)

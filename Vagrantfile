@@ -17,7 +17,7 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.provision :ansible do |ansible|
-        # Use export ANSIBLE_TAGS="tag1,tag2"; vagrant provision
+        # Use `export ANSIBLE_TAGS="tag1,tag2"; vagrant provision`
         ansible.tags = ANSIBLE_TAGS
         ansible.playbook = "ansible/vagrant-playbook.yml"
     end

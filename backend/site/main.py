@@ -1,6 +1,5 @@
 import signal
 import asyncio
-import logging
 
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp.exception import ApplicationError
@@ -8,12 +7,15 @@ from aiohttp import web
 import aiohttp_jinja2
 import jinja2
 
+from ..utils import getLogger
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(levelname)7s: %(message)s'
-)
-logger = logging.getLogger('')
+logger = getLogger('site.main')
+
+
+def errpage(request, status_text, status_code):
+    "Returns custom error page"
+    context = {'status_text': status_text, 'status_code': status_code}
+    return aiohttp_jinja2.render_template('errpage.html', request, context)
 
 
 async def site_factory(wampsess):
@@ -26,27 +28,36 @@ async def site_factory(wampsess):
     async def frontpage(request):
         # name = request.match_info.get('name', 'Anonymous')
         try:
-            msgs = await wampsess.call('com.messages.fetchmsgs', 0)
+            msgs = await wampsess.call('at.messages.fetchmsgs', 0)
         except ApplicationError:
             msgs = 'error'
             # Automatically prints exception information
-            logger.exception("Could not reach com.messages.fetchmsgs")
+            logger.exception("Could not reach at.messages.fetchmsgs")
         return {
             'adventures': [{}, {}, {}],
             'messages': msgs
         }
 
-    @aiohttp_jinja2.template('trackuser.html')
     async def trackuser(request):
-        hexslug = request.match_info.get('hexslug')
-        return {'user': 'hithere ' + hexslug}
+        user_id_hash = request.match_info.get('user_id_hash')
+        try:
+            user = await wampsess.call('at.users.getuser_hash', user_id_hash)
+            if not user:
+                # Proper escaping done in template
+                return errpage(request, "User {} does not exist".format(user_id_hash), 404)
+        except ApplicationError:
+            logger.exception("Could not reach at.users.getuser_hash")
+            return errpage(request, "Could not reach user service", 500)
+        context = {'user': user}
+        response = aiohttp_jinja2.render_template('trackuser.html', request, context)
+        return response
 
     app = web.Application()
 
     aiohttp_jinja2.setup(app, loader=jinja2.PackageLoader('backend.site'))
 
     app.router.add_get('/', frontpage)
-    app.router.add_get(r'/u/{hexslug}', trackuser)
+    app.router.add_get(r'/u/{user_id_hash}', trackuser)
 
     # TODO: Use nginx instead
     import os.path as p

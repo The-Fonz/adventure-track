@@ -52,3 +52,4 @@
     - sqlalchemy
     - pillow
     - python-dateutil
+    - hashids

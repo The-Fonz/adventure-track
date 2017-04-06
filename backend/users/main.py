@@ -6,17 +6,13 @@ from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from .db import Db
 from ..utils import getLogger
 
-logger = getLogger('messages.main')
+logger = getLogger('users.main')
 
 
-class MessagesComponent(ApplicationSession):
+class UsersComponent(ApplicationSession):
     def __init__(self, config=None):
         ApplicationSession.__init__(self, config)
         logger.info("component created")
-
-    # def onConnect(self):
-    #     logger.info("transport connected")
-    #     self.join(self.config.realm)
 
     def onChallenge(self, challenge):
         logger.info("authentication challenge received")
@@ -27,25 +23,15 @@ class MessagesComponent(ApplicationSession):
         db = await Db.create()
         self.db = db
 
-        async def fetchmsgs(user_id_hash):
-            user_id = await self.call('at.users.getuser_hash_id', user_id_hash)
-            return await db.getmsgs(user_id)
+        async def getuser_hash(user_id_hash):
+            return await db.getuser(user_id_hash)
 
-        self.register(fetchmsgs, 'at.messages.fetchmsgs')
+        async def getuser_hash_id(user_id_hash):
+            "Returns only numeric user id"
+            return await db.getuser_id(user_id_hash)
 
-        def insertmsg(msgjson):
-            # Save in db
-            pass
-
-        # register insert msg
-
-        # Publish on insert message
-
-    # def onLeave(self, details):
-    #     logger.info("session left")
-    #
-    # def onDisconnect(self):
-    #     logger.info("transport disconnected")
+        self.register(getuser_hash, 'at.users.getuser_hash')
+        self.register(getuser_hash_id, 'at.users.getuser_hash_id')
 
 
 if __name__=="__main__":
@@ -53,18 +39,13 @@ if __name__=="__main__":
     l = asyncio.get_event_loop()
 
     runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
-    # ApplicationRunner starts asyncio loop, and adds SIGTERM handler
-    # Takes standard event loop
-    protocol = runner.run(MessagesComponent, start_loop=False)
+    protocol = runner.run(UsersComponent, start_loop=False)
 
     l.add_signal_handler(signal.SIGINT, l.stop)
     l.add_signal_handler(signal.SIGTERM, l.stop)
 
     l.run_forever()
     logger.info("Loop stopped")
-
-    logger.info("Finish db transcode queues")
-    l.run_until_complete(protocol._session.db.finish_queues())
 
     # Clean up stuff after loop stops
     # if protocol._session:
