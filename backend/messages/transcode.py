@@ -41,16 +41,21 @@ async def transcode(q, mediatype):
         res = m[3]
         # Convert only from slicevid[0] to slicevid[1] seconds
         slicevid = m[4]
-        # TODO: Different folder
-        basefn = os.path.splitext(original)[0]
+        mediapath = os.path.abspath(os.path.normpath(os.environ['AT_MEDIA_ROOT']))
+        # Original path is relative to media root for portability
+        original = os.path.join(mediapath, original)
+        basefn = os.path.splitext(os.path.basename(original))[0]
         if mediatype == 'video':
+            basefn = os.path.join(mediapath, 'video', basefn)
             if 'thumb' in res['type']:
-                versions = await video_thumb(original, basefn, res)
+                versions = await video_thumb(original, basefn, res, start=mediapath)
             else:
-                versions = await video_ffmpeg(original, basefn, res, cutfrom=slicevid[0], cutto=slicevid[1])
+                versions = await video_ffmpeg(original, basefn, res, cutfrom=slicevid[0], cutto=slicevid[1], start=mediapath)
         elif mediatype == 'image':
-            versions = await convert_image(original, basefn, res)
+            basefn = os.path.join(mediapath, 'image', basefn)
+            versions = await convert_image(original, basefn, res, start=mediapath)
         elif mediatype == 'audio':
+            basefn = os.path.join(mediapath, 'audio', basefn)
             raise Warning("Transcoding audio not implemented")
         res = {
             'mediatype': 'video',
@@ -60,17 +65,17 @@ async def transcode(q, mediatype):
         q.task_done()
 
 
-async def video_thumb(vidfile, basefn, wh):
+async def video_thumb(vidfile, basefn, wh, start=None):
     "Generate thumbnail for video"
     # Create thumbnail
     thumbfn = basefn + '-thumb.test.jpg'
     cmd = "ffmpeg -y -i {input} -vf thumbnail,scale=640:360 -frames:v 1 {output}".format(
         input=vidfile, output=thumbfn)
     await run(cmd)
-    return {'thumb': thumbfn}
+    return {'thumb': os.path.relpath(thumbfn, start=start)}
 
 
-async def video_ffmpeg(vidfile, basefn, res, cutfrom=None, cutto=None):
+async def video_ffmpeg(vidfile, basefn, res, cutfrom=None, cutto=None, start=None):
     """
 
     Improvement ideas:
@@ -91,10 +96,10 @@ async def video_ffmpeg(vidfile, basefn, res, cutfrom=None, cutto=None):
         cmd += "-ss {} -to {} ".format(cutfrom, cutto)
     cmd += "-c:v libx264 -vf scale={scale} -crf 26 -c:a copy {output}".format(output=outfn, scale=scale)
     await run(cmd)
-    return {res['type']: outfn}
+    return {res['type']: os.path.relpath(outfn, start=start)}
 
 
-def convert_image(input, basefn, res):
+def convert_image(input, basefn, res, start=None):
     im = Image.open(input)
     newim = im.copy()
     # Modifies in-place
@@ -102,7 +107,7 @@ def convert_image(input, basefn, res):
     # Make new filename
     impath = basefn + '-{}.jpg'.format(sizename)
     newim.save(impath, format='JPEG')
-    return {res['type']: impath}
+    return {res['type']: os.path.relpath(impath, start=start)}
 
 
 def convert_audio():

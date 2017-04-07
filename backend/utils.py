@@ -10,7 +10,7 @@ def getLogger(name):
     "Centralized logging setup"
     logging.basicConfig(
         level=logging.DEBUG,
-        format='%(levelname)7s: %(asctime)s %(name)s:%(lineno)s %(message)s'
+        format='%(levelname)7s: %(asctime)s %(name)s:%(funcName)s:%(lineno)s %(message)s'
     )
     return logging.getLogger(name)
 

@@ -39,7 +39,7 @@ class UsersComponent(ApplicationSession):
 
         self.register(get_user_by_hash, 'at.users.get_user_by_hash')
         self.register(get_user_id_by_hash, 'at.users.get_user_id_by_hash')
-        self.register(get_user_id_by_hash, 'at.users.get_user_hash_by_id')
+        self.register(get_user_hash_by_id, 'at.users.get_user_hash_by_id')
         self.register(check_user_authcode, 'at.users.check_user_authcode')
 
 

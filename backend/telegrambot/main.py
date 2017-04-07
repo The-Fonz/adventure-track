@@ -24,8 +24,9 @@ class TelegramComponent(ApplicationSession):
         self.db = await Db.create()
 
         # Create and run bot
-        bot_main(self, asyncio.get_event_loop())
+        self.updater = bot_main(self, asyncio.get_event_loop())
         logger.info("bot is running")
+
 
 
 if __name__=="__main__":
@@ -40,6 +41,9 @@ if __name__=="__main__":
 
     l.run_forever()
     logger.info("Loop stopped")
+
+    # Synchronous method, stop polling/webhook thread, dispatcher and job queue
+    protocol._session.updater.stop()
 
     # Clean up stuff after loop stops
     # if protocol._session:

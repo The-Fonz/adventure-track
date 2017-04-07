@@ -34,23 +34,31 @@ class MessagesComponent(ApplicationSession):
         self.register(fetchmsgs, 'at.messages.fetchmsgs')
 
         async def insertmsg(msgjson):
+            logger.debug("Inserting message...")
             q = asyncio.Queue()
+            user_id = msgjson['user_id']
             # Run while continuing this coroutine
             asyncio.ensure_future(db.insertmsg(msgjson, updatequeue=q))
             # Emit any updates caused by media rendering finishing
             user_id_hash = None
             first = True
             while True:
+                logger.debug("Wait for update")
                 update = await q.get()
+                logger.debug("GET update")
                 # Stop signal
                 if update == None:
+                    logger.debug("Stop signal")
                     break
                 # Do this only once, updates are for only one user
                 if not user_id_hash:
-                    user_id_hash = await self.call('at.users.get_user_hash_by_id')
+                    logger.debug("Getting user id hash")
+                    user_id_hash = await self.call('at.users.get_user_hash_by_id', user_id)
                 # Emit event on channel at.messages.user.<id_hash>
                 userchannel = 'at.messages.user.{}'.format(user_id_hash)
-                await self.publish(userchannel, update)
+                # For some reason this method is synchronous
+                self.publish(userchannel, update)
+                logger.debug("Published update on channel %s for user_id %s", userchannel, user_id)
                 first = False
             if first:
                 # Need to fail so WAMP caller gets notified

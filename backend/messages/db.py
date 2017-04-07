@@ -144,12 +144,15 @@ class Db():
                 , id, json.dumps(versions))
                 # Notify any listeners
                 if updatequeue:
-                    updatequeue.put(await self.getmsg(id))
+                    await updatequeue.put(await self.getmsg(id))
+        logger.debug("If updatequeue")
         if updatequeue:
+            logger.debug("Putting self.getmsg")
             # Might be double, but at least we send an update if transcoding futures fail
-            updatequeue.put(await self.getmsg(id))
+            await updatequeue.put(await self.getmsg(id))
+            logger.debug("Put stop signal")
             # Stop signal
-            updatequeue.put(None)
+            await updatequeue.put(None)
         if not existingconn:
             await self.pool.release(conn)
         # Return nothing, need to pass an updatequeue to listen to updates
