@@ -27,4 +27,5 @@
     - role: postgres
       dbname: atsite
     - supervisord
-    - nginx
+    - role: nginx
+      tags: ["nginx"]

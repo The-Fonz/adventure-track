@@ -31,6 +31,8 @@ server {
     # Needs to be exact match to prevent nginx from redirecting to /ws/
     location = /ws {
         include proxy_params;
+        # Standard timeout is 60s, make it 10 hours
+        proxy_read_timeout 36000s;
         proxy_pass http://localhost:8080/ws;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;

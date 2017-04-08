@@ -4,5 +4,5 @@ dependencies:
    nginx_sites:
      atsite:
        template: atsite.conf.j2
-       # Additional values can be defined here
+       # Additional values can be defined here, accessible using {{item.value.foo_bar}}
        #server_name: foo_bar
