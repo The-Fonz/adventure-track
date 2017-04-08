@@ -66,7 +66,7 @@ async def site_factory(wampsess):
 
     loop = asyncio.get_event_loop()
 
-    await loop.create_server(app.make_handler(), '0.0.0.0', 5000)
+    await loop.create_server(app.make_handler(), '127.0.0.1', 5000)
 
 
 class SiteComponent(ApplicationSession):

@@ -10,18 +10,17 @@
 - name: install crossbar apt package
   apt: name=crossbar update_cache=yes
 
-- name: check if crossbar node config dir exists
-  stat:
-    path: /etc/defaultcrossbarnode
-  register: defaultcrossbarnode_folder
+- name: make crossbar config folder
+  file:
+    # Writes pid to this folder so must be accessible by user crossbar runs as
+    owner: atuser
+    path: /etc/.crossbar
+    state: directory
 
-- name: crossbar node config dir
-  # Only on first install
-  when: not defaultcrossbarnode_folder.stat.exists
-  become_user: root
-  # This directory must be referenced in the service template
-  # Change ownership so atuser can run service and write PID
-  shell: /opt/crossbar/bin/crossbar init --template default --appdir /etc/defaultcrossbarnode && chown -R atuser:atuser /etc/defaultcrossbarnode
+- name: configure crossbar node
+  template:
+    src: config.yaml
+    dest: /etc/.crossbar/config.yaml
 
 - name: create crossbar service config file
   template:

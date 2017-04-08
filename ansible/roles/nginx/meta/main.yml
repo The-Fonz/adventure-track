@@ -1,0 +1,8 @@
+---
+dependencies:
+ - role: jdauphant.nginx
+   nginx_sites:
+     atsite:
+       template: atsite.conf.j2
+       # Additional values can be defined here
+       #server_name: foo_bar

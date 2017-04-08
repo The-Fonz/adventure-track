@@ -1,0 +1,63 @@
+upstream atsite {
+    server 127.0.0.1:5000;
+}
+
+server {
+    # Add server catch-all if vm
+    server_name adventure-track.com {%if DEV%}_{%endif%};
+
+    # Work around virtualbox sendfile bug
+    {% if DEV %}
+        sendfile off;
+        open_file_cache off;
+    {% endif %}
+
+    # Enable gzip for a variety of content types
+    gzip on;
+    gzip_min_length 1000;
+    gzip_types text/plain text/css application/json application/javascript text/javascript;
+
+    # Avoid issues with people uploading large files
+    client_max_body_size 1000m;
+
+    # Frontend
+    location / {
+        # Standard /etc/nginx/proxy_params
+        include proxy_params;
+        proxy_pass http://atsite;
+    }
+
+    # Crossbar router
+    # Needs to be exact match to prevent nginx from redirecting to /ws/
+    location = /ws {
+        include proxy_params;
+        proxy_pass http://localhost:8080/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_buffering off;
+    }
+
+    # All static files (css, js)
+    location /static/ {
+        alias /home/atuser/adventure-track/client/static/;
+    }
+
+    # All media (video, image, audio)
+    # Define separate to avoid access to folders with originals
+    location /media/video/ {
+        alias /home/atuser/media/video/;
+    }
+    location /media/image/ {
+        alias /home/atuser/media/image/;
+    }
+    location /media/audio/ {
+        alias /home/atuser/media/audio/;
+    }
+
+    # Don't use nginx thread pools with video directory,
+    # probably all video files for a popular race will be cached in memory
+    # which is faster. With nginx/linux it's either non-blocking loading
+    # from disk with thread pools or blocking loading from memory/disk.
+    # (nginx cannot check if a file is cached in memory due to kernel)
+}

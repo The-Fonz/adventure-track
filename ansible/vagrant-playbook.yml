@@ -22,42 +22,9 @@
   roles:
     - add_user
     - common
-    - crossbar
+    - role: crossbar
+      tags: ["crossbar"]
     - role: postgres
       dbname: atsite
     - supervisord
-    # Separate test db
-#    - role: postgres
-#      dbname: attestdb
-#    - role: jdauphant.nginx
-#      tags: ["nginx"]
-#      # TODO: Turn sendfile off ONLY FOR DEV SERVER
-#      nginx_http_params: ["sendfile off", "open_file_cache off"]
-#      nginx_configs:
-#        gzip:
-#          - gzip on
-#          - gzip_min_length 1000
-#          - gzip_types text/plain text/css application/json application/javascript text/javascript
-#      nginx_sites:
-#        casite:
-#         - listen 80
-#         # TODO: Replace with proper URL, _ only in vm
-#         - server_name _
-#         - |
-#           location / { include proxy_params;
-#                        proxy_pass http://localhost:8080;
-#                      }
-#         # TODO: Add support for load-balancing as per flask-socketio docs
-#         - |
-#           location /socketio { include proxy_params;
-#                                proxy_http_version 1.1;
-#                                proxy_buffering off;
-#                                proxy_set_header Upgrade $http_upgrade;
-#                                proxy_set_header Connection "Upgrade";
-#                                proxy_pass http://localhost:8080/socketio;
-#                              }
-         # Don't use nginx thread pools with video directory,
-         # probably all video files for a popular race will be cached in memory
-         # which is faster. With nginx/linux it's either non-blocking loading
-         # from disk with thread pools or blocking loading from memory/disk.
-         # (nginx cannot check if a file is cached in memory due to kernel)
+    - nginx

@@ -101,7 +101,7 @@ db.on('newAthletes', (newAthletes) => {
  * AUTOBAHN
  */
 
-var wsuri = "ws://127.0.0.1:8080/ws";
+var wsuri = `ws://${window.location.host}/ws`;
 
 // the WAMP connection to the Router
 var connection = new autobahn.Connection({
