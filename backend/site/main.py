@@ -59,11 +59,6 @@ async def site_factory(wampsess):
     app.router.add_get('/', frontpage)
     app.router.add_get(r'/u/{user_id_hash}', trackuser)
 
-    # TODO: Use nginx instead
-    import os.path as p
-    # Assume working dir is repo root
-    app.router.add_static('/static', p.abspath(p.join('client', 'static')))
-
     loop = asyncio.get_event_loop()
 
     await loop.create_server(app.make_handler(), '127.0.0.1', 5000)

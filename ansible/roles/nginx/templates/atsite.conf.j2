@@ -3,8 +3,9 @@ upstream atsite {
 }
 
 server {
+    # Use leading dot to match subdomains as well
     # Add server catch-all if vm
-    server_name adventure-track.com {%if DEV%}_{%endif%};
+    server_name .adventure-track.com {%if DEV%}_{%endif%};
 
     # Work around virtualbox sendfile bug
     {% if DEV %}
@@ -19,6 +20,9 @@ server {
 
     # Avoid issues with people uploading large files
     client_max_body_size 1000m;
+
+    # Default no browser cache
+    expires epoch;
 
     # Frontend
     location / {
@@ -42,19 +46,25 @@ server {
 
     # All static files (css, js)
     location /static/ {
+        {% if not DEV %}
+            # Ensure that people get latest js and css asap
+            # TODO: Add query param or use custom filename based on etag
+            expires epoch;
+        {% endif %}
         alias /home/atuser/adventure-track/client/static/;
     }
 
     # All media (video, image, audio)
-    # Define separate to avoid access to folders with originals
-    location /media/video/ {
-        alias /home/atuser/media/video/;
-    }
-    location /media/image/ {
-        alias /home/atuser/media/image/;
-    }
-    location /media/audio/ {
-        alias /home/atuser/media/audio/;
+    location /media/ {
+        {% if not DEV %}
+            # Media is unlikely to change once encoded
+            expires 60m;
+        {% endif %}
+        # Avoid access to folders with originals
+        location ~ video/|image/|audio/ {
+            # Will always add e.g. media/video
+            root /home/atuser/;
+        }
     }
 
     # Don't use nginx thread pools with video directory,
