@@ -42,6 +42,10 @@ class UsersComponent(ApplicationSession):
         self.register(get_user_hash_by_id, 'at.users.get_user_hash_by_id')
         self.register(check_user_authcode, 'at.users.check_user_authcode')
 
+    def onDisconnect(self):
+        logger.warn("transport disconnected, stopping event loop...")
+        asyncio.get_event_loop().stop()
+
 
 if __name__=="__main__":
 

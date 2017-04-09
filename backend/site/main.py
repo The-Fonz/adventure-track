@@ -2,7 +2,7 @@ import signal
 import asyncio
 
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
-from autobahn.wamp.exception import ApplicationError
+from autobahn.wamp.exception import ApplicationError, TransportLost
 from aiohttp import web
 import aiohttp_jinja2
 import jinja2
@@ -84,8 +84,9 @@ class SiteComponent(ApplicationSession):
     # def onLeave(self, details):
     #     print("session left")
     #
-    # def onDisconnect(self):
-    #     print("transport disconnected")
+    def onDisconnect(self):
+        logger.warn("transport disconnected, stopping event loop...")
+        asyncio.get_event_loop().stop()
 
 
 if __name__=="__main__":
@@ -108,6 +109,5 @@ if __name__=="__main__":
     #     print("Running protocol session leave")
     #     l.run_until_complete(protocol._session.leave())
 
-    l.run_until_complete(l.shutdown_asyncgens())
     l.close()
     logger.info("Loop closed")

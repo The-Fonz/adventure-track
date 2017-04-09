@@ -71,8 +71,9 @@ class MessagesComponent(ApplicationSession):
     # def onLeave(self, details):
     #     logger.info("session left")
     #
-    # def onDisconnect(self):
-    #     logger.info("transport disconnected")
+    def onDisconnect(self):
+        logger.warn("transport disconnected, stopping event loop...")
+        asyncio.get_event_loop().stop()
 
 
 if __name__=="__main__":

@@ -27,6 +27,11 @@ class TelegramComponent(ApplicationSession):
         self.updater = bot_main(self, asyncio.get_event_loop())
         logger.info("bot is running")
 
+    def onDisconnect(self):
+        logger.warn("transport disconnected, stop updater and event loop...")
+        self.updater.stop()
+        asyncio.get_event_loop().stop()
+
 
 
 if __name__=="__main__":
@@ -42,14 +47,11 @@ if __name__=="__main__":
     l.run_forever()
     logger.info("Loop stopped")
 
-    # Synchronous method, stop polling/webhook thread, dispatcher and job queue
-    protocol._session.updater.stop()
-
-    # Clean up stuff after loop stops
-    # if protocol._session:
+    # Clean up stuff if active session
+    if protocol._session:
+        protocol._session.updater.stop()
     #     logger.info("Running protocol session leave")
     #     l.run_until_complete(protocol._session.leave())
 
-    l.run_until_complete(l.shutdown_asyncgens())
     l.close()
     logger.info("Loop closed")
