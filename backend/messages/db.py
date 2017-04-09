@@ -83,6 +83,19 @@ class Db():
             await self.pool.release(conn)
         return out
 
+    async def uniquemsgs(self, n=5, existingconn=None):
+        "Return last n messages, max. one per user"
+        conn = existingconn or await self.pool.acquire()
+        recs = await conn.fetch(
+            'SELECT DISTINCT ON (user_id) * '
+            # Any clause in DISTINCT ON must be in ORDER BY clause as well
+            'FROM message ORDER BY user_id, received DESC LIMIT $1;', n)
+        out = await records_to_json(recs)
+        # Release acquired connection
+        if not existingconn:
+            await self.pool.release(conn)
+        return out
+
     async def insertmsg(self, msgjson, updatequeue=None, slicevid=[None,None], existingconn=None):
         """
         Parses msg json and inserts into db.

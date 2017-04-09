@@ -27,6 +27,11 @@ class MessagesComponent(ApplicationSession):
         db = await Db.create()
         self.db = db
 
+        async def uniquemsgs(n=5):
+            return await db.uniquemsgs(n=n)
+
+        self.register(uniquemsgs, 'at.messages.uniquemsgs')
+
         async def fetchmsgs(user_id_hash):
             user_id = await self.call('at.users.get_user_id_by_hash', user_id_hash)
             return await db.getmsgs(user_id)

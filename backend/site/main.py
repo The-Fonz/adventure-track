@@ -28,13 +28,14 @@ async def site_factory(wampsess):
     async def frontpage(request):
         # name = request.match_info.get('name', 'Anonymous')
         try:
-            msgs = await wampsess.call('at.messages.fetchmsgs', 0)
+            # Get n most recent messages, unique by user
+            msgs = await wampsess.call('at.messages.uniquemsgs', n=5)
         except ApplicationError:
             msgs = 'error'
             # Automatically prints exception information
             logger.exception("Could not reach at.messages.fetchmsgs")
         return {
-            'adventures': [{}, {}, {}],
+            'adventures': [],
             'messages': msgs
         }
 
