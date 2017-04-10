@@ -3,6 +3,7 @@ import asyncio
 
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp.exception import ApplicationError, TransportLost
+from autobahn.wamp.types import RegisterOptions
 from aiohttp import web
 import aiohttp_jinja2
 import jinja2
@@ -80,6 +81,14 @@ class SiteComponent(ApplicationSession):
     async def onJoin(self, details):
         logger.info("session joined")
 
+        async def log_analytics_event(details):
+            session = await self.call('wamp.session.get', details.caller)
+            peer = session['transport']['peer']
+
+        self.register(log_analytics_event, 'at.site.log_analytics_event',
+                      RegisterOptions(details_arg='details'))
+
+        # Pass SiteComponent so WAMP can be used from within http responses
         await site_factory(self)
 
     # def onLeave(self, details):

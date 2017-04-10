@@ -29,3 +29,5 @@
     - supervisord
     - role: nginx
       tags: ["nginx"]
+    - role: fluentd
+      tags: ["fluentd"]

@@ -54,3 +54,4 @@
     - python-dateutil
     - hashids
     - python-telegram-bot
+    - fluent-logger
