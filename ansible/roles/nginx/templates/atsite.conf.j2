@@ -2,6 +2,10 @@ upstream atsite {
     server 127.0.0.1:5000;
 }
 
+upstream atanalytics {
+    server 127.0.0.1:5001;
+}
+
 server {
     # Use leading dot to match subdomains as well
     # Add server catch-all if vm
@@ -19,7 +23,7 @@ server {
     gzip_types text/plain text/css application/json application/javascript text/javascript;
 
     # Avoid issues with people uploading large files
-    client_max_body_size 1000m;
+    client_max_body_size 4G;
 
     # Default no browser cache
     expires epoch;
@@ -29,6 +33,13 @@ server {
         # Standard /etc/nginx/proxy_params
         include proxy_params;
         proxy_pass http://atsite;
+    }
+
+    # Match /analytics and /analytics/hi but not /analyticsss
+    # (?:...) is a passive group
+    location ~ ^/analytics(?:/(.*))?$ {
+        include proxy_params;
+        proxy_pass http://atanalytics/$1;
     }
 
     # Crossbar router

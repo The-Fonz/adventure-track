@@ -1,6 +1,0 @@
----
-dependencies:
-# ansible-galaxy install williamyeh.fluentd
- - role: williamyeh.fluentd
-   # Relative to ansible directory
-   tdagent_conf_template: roles/fluentd/templates/td-agent.conf.j2

@@ -29,5 +29,3 @@
     - supervisord
     - role: nginx
       tags: ["nginx"]
-    - role: syslog-ng
-      tags: ["log"]

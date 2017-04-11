@@ -1,5 +1,8 @@
 import signal
 import asyncio
+import datetime
+from time import time
+import uuid
 
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp.exception import ApplicationError, TransportLost
@@ -19,7 +22,7 @@ def errpage(request, status_text, status_code):
     return aiohttp_jinja2.render_template('errpage.html', request, context)
 
 
-async def site_factory(wampsess):
+async def site_factory(wampsess, middlewares):
     """
     Creates aiohttp server listening on specified port
     :param wampsession:
@@ -54,7 +57,7 @@ async def site_factory(wampsess):
         response = aiohttp_jinja2.render_template('trackuser.html', request, context)
         return response
 
-    app = web.Application()
+    app = web.Application(middlewares=middlewares)
 
     aiohttp_jinja2.setup(app, loader=jinja2.PackageLoader('backend.site'))
 
@@ -81,15 +84,69 @@ class SiteComponent(ApplicationSession):
     async def onJoin(self, details):
         logger.info("session joined")
 
-        async def log_analytics_event(details):
-            session = await self.call('wamp.session.get', details.caller)
-            peer = session['transport']['peer']
+        async def send_analytics_event(evt):
+            "Send analytics event to service"
+            try:
+                await self.call('at.analytics.insert_event', evt)
+            except ApplicationError:
+                # TODO: How to get this error to Sentry?
+                logger.exception("Could not reach analytics service!")
+                # Serialize event to logs
+                logger.info("Event: %s", evt)
 
-        self.register(log_analytics_event, 'at.site.log_analytics_event',
-                      RegisterOptions(details_arg='details'))
+        async def pageview_middleware(app, handler):
+            async def middleware_handler(request):
+                # Seconds since epoch
+                t1 = time()
+                resp = await handler(request)
+                t2 = time()
+                # Try to do all this stuff but send response anyway if it fails
+                try:
+                    rh = request.headers
+                    # Get cookie if present
+                    browser_id = request.cookies.get('browser_id')
+                    if browser_id and len(browser_id) != 36:
+                        logger.warn("Invalid browser ID: %s", browser_id)
+                        browser_id = None
+                    # Generate browser id if not present
+                    if not browser_id:
+                        browser_id = str(uuid.uuid4())
+                        resp.set_cookie("browser_id", browser_id, max_age=3153600000)
+                    evt = [
+                        # event_type
+                        "pageview",
+                        # user_id
+                        None,
+                        # browser_id
+                        browser_id,
+                        # request_url: url path, including query string
+                        str(request.rel_url),
+                        # request_ip
+                        rh.get("X-Real-IP"),
+                        # request_method
+                        request.method,
+                        # request_referer
+                        rh.get("Referer"),
+                        # request_user_agent
+                        rh.get("User-Agent"),
+                        # response_status
+                        int(resp.status),
+                        # response_length
+                        int(resp.content_length),
+                        # response_time_taken FLOAT
+                        t2 - t1,
+                        # extra JSONB
+                        None
+                    ]
+                    # Schedule but don't wait for it
+                    asyncio.ensure_future(send_analytics_event(evt))
+                finally:
+                    return resp
+            return middleware_handler
 
         # Pass SiteComponent so WAMP can be used from within http responses
-        await site_factory(self)
+        # Pass list of middlewares
+        await site_factory(self, [pageview_middleware])
 
     # def onLeave(self, details):
     #     print("session left")
