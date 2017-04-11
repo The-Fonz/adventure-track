@@ -94,52 +94,62 @@ class SiteComponent(ApplicationSession):
                 # Serialize event to logs
                 logger.info("Event: %s", evt)
 
+        async def create_analytics_event(request, resp, t):
+            "Create analytics event from request and response objects, then send it"
+            try:
+                rh = request.headers
+                # Get cookie if present
+                browser_id = request.cookies.get('browser_id')
+                if browser_id and len(browser_id) != 36:
+                    logger.warn("Invalid browser ID: %s", browser_id)
+                    browser_id = None
+                # Generate browser id if not present
+                if not browser_id:
+                    browser_id = str(uuid.uuid4())
+                    resp.set_cookie("browser_id", browser_id, max_age=3153600000)
+                evt = [
+                    # event_type
+                    "pageview",
+                    # user_id
+                    None,
+                    # browser_id
+                    browser_id,
+                    # request_url: url path, including query string
+                    str(request.rel_url),
+                    # request_ip
+                    rh.get("X-Real-IP"),
+                    # request_method
+                    request.method,
+                    # request_referer
+                    rh.get("Referer"),
+                    # request_user_agent
+                    rh.get("User-Agent"),
+                    # response_status
+                    int(resp.status),
+                    # response_length
+                    int(resp.content_length),
+                    # response_time_taken FLOAT
+                    t,
+                    # extra JSONB
+                    None
+                ]
+                await send_analytics_event(evt)
+            except Exception:
+                logger.exception("Failed to create or send analytics event")
+
+
         async def pageview_middleware(app, handler):
             async def middleware_handler(request):
                 # Seconds since epoch
                 t1 = time()
                 resp = await handler(request)
                 t2 = time()
-                # Try to do all this stuff but send response anyway if it fails
                 try:
-                    rh = request.headers
-                    # Get cookie if present
-                    browser_id = request.cookies.get('browser_id')
-                    if browser_id and len(browser_id) != 36:
-                        logger.warn("Invalid browser ID: %s", browser_id)
-                        browser_id = None
-                    # Generate browser id if not present
-                    if not browser_id:
-                        browser_id = str(uuid.uuid4())
-                        resp.set_cookie("browser_id", browser_id, max_age=3153600000)
-                    evt = [
-                        # event_type
-                        "pageview",
-                        # user_id
-                        None,
-                        # browser_id
-                        browser_id,
-                        # request_url: url path, including query string
-                        str(request.rel_url),
-                        # request_ip
-                        rh.get("X-Real-IP"),
-                        # request_method
-                        request.method,
-                        # request_referer
-                        rh.get("Referer"),
-                        # request_user_agent
-                        rh.get("User-Agent"),
-                        # response_status
-                        int(resp.status),
-                        # response_length
-                        int(resp.content_length),
-                        # response_time_taken FLOAT
-                        t2 - t1,
-                        # extra JSONB
-                        None
-                    ]
                     # Schedule but don't wait for it
-                    asyncio.ensure_future(send_analytics_event(evt))
+                    asyncio.ensure_future(create_analytics_event(request, resp, t2-t1))
+                except Exception:
+                    logger.exception("Failed to schedule create_analytics_event")
+                # Always send response
                 finally:
                     return resp
             return middleware_handler
