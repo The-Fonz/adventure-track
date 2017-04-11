@@ -29,5 +29,5 @@
     - supervisord
     - role: nginx
       tags: ["nginx"]
-    - role: fluentd
-      tags: ["fluentd"]
+    - role: syslog-ng
+      tags: ["log"]
