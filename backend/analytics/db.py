@@ -49,6 +49,24 @@ class Db():
             await self.pool.release(conn)
         return stat
 
+    async def get_daily_visitors(self, existingconn=None):
+        "Return (<dates_array>, <total_pageviews_array>, <unique_visitor_count>)"
+        # Pool has same interface as connection
+        conn = existingconn or self.pool
+        total_pageviews = await conn.fetch(
+            "SELECT date_trunc('day', received) as dt, count(received) "
+            "FROM analytics_events "
+            "WHERE event_type = 'pageview' GROUP BY dt ORDER BY dt ASC;"
+        )
+        unique_visitors = await conn.fetch(
+            "SELECT a2.dt, count(a2.bid) FROM (SELECT DISTINCT ON (dt, a.browser_id) date_trunc('day', a.received) as dt, browser_id as bid FROM analytics_events as a WHERE a.event_type = 'pageview') as a2 GROUP BY a2.dt ORDER BY dt ASC;"
+        )
+        return [
+            [rec['dt'] for rec in total_pageviews],
+            [rec['count'] for rec in total_pageviews],
+            [rec['count'] for rec in unique_visitors]
+        ]
+
     async def insert_event(self, evt, existingconn=None):
         """
         Inserts event list into db.

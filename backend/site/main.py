@@ -1,17 +1,15 @@
 import signal
 import asyncio
-import datetime
 from time import time
 import uuid
 
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp.exception import ApplicationError, TransportLost
-from autobahn.wamp.types import RegisterOptions
 from aiohttp import web
 import aiohttp_jinja2
 import jinja2
 
-from ..utils import getLogger
+from ..utils import BackendAppSession, getLogger
 
 logger = getLogger('site.main')
 
@@ -69,17 +67,7 @@ async def site_factory(wampsess, middlewares):
     await loop.create_server(app.make_handler(), '127.0.0.1', 5000)
 
 
-class SiteComponent(ApplicationSession):
-    def __init__(self, config=None):
-        ApplicationSession.__init__(self, config)
-        logger.info("component created")
-
-    def onConnect(self):
-        logger.info("transport connected")
-        self.join(self.config.realm)
-
-    def onChallenge(self, challenge):
-        logger.info("authentication challenge received")
+class SiteComponent(BackendAppSession):
 
     async def onJoin(self, details):
         logger.info("session joined")
@@ -157,13 +145,6 @@ class SiteComponent(ApplicationSession):
         # Pass SiteComponent so WAMP can be used from within http responses
         # Pass list of middlewares
         await site_factory(self, [pageview_middleware])
-
-    # def onLeave(self, details):
-    #     print("session left")
-    #
-    def onDisconnect(self):
-        logger.warn("transport disconnected, stopping event loop...")
-        asyncio.get_event_loop().stop()
 
 
 if __name__=="__main__":

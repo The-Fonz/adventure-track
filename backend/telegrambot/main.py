@@ -4,19 +4,13 @@ import asyncio
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
 from .db import Db
-from ..utils import getLogger
+from ..utils import BackendAppSession, getLogger
 from .bot import main as bot_main
 
 logger = getLogger('telegrambot.main')
 
 
-class TelegramComponent(ApplicationSession):
-    def __init__(self, config=None):
-        ApplicationSession.__init__(self, config)
-        logger.info("component created")
-
-    def onChallenge(self, challenge):
-        logger.info("authentication challenge received")
+class TelegramComponent(BackendAppSession):
 
     async def onJoin(self, details):
         logger.info("session joined")
@@ -29,7 +23,9 @@ class TelegramComponent(ApplicationSession):
 
     def onDisconnect(self):
         logger.warn("transport disconnected, stop updater and event loop...")
-        self.updater.stop()
+        # Prevent AttributeError if not joined
+        if getattr(self, 'updater'):
+            self.updater.stop()
         asyncio.get_event_loop().stop()
 
 

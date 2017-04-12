@@ -3,6 +3,7 @@ Description=Crossbar.io
 After=network.target
 
 [Service]
+EnvironmentFile=/etc/environment
 Type=simple
 User=atuser
 Group=atuser

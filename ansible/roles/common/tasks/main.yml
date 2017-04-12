@@ -55,3 +55,4 @@
     - python-dateutil
     - hashids
     - python-telegram-bot
+    - plotly

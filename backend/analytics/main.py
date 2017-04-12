@@ -2,12 +2,13 @@ import signal
 import asyncio
 
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
+from autobahn.wamp.types import RegisterOptions
 from aiohttp import web
 import aiohttp_jinja2
 import jinja2
 
 from .db import Db
-from ..utils import getLogger
+from ..utils import BackendAppSession, getLogger
 
 logger = getLogger('analytics.main')
 
@@ -20,15 +21,22 @@ async def site_factory(wampsess):
     """
     @aiohttp_jinja2.template('dashboard.html')
     async def dashboard(request):
-        # name = request.match_info.get('name', 'Anonymous')
-        # try:
-        #     # Get n most recent messages, unique by user
-        #     msgs = await wampsess.call('at.messages.uniquemsgs', n=5)
-        # except ApplicationError:
-        #     msgs = 'error'
-        #     # Automatically prints exception information
-        #     logger.exception("Could not reach at.messages.fetchmsgs")
-        return {}
+        # Pygal is nice and simple plotting library with
+        # output to both interactive HTML and SVG or PNG
+        # Plotly and holoview are also nice but more involved
+        vis = await wampsess.db.get_daily_visitors()
+        logger.info(vis)
+        import pygal
+        bar_chart = pygal.Bar(legend_at_bottom=True,
+                        legend_at_bottom_columns=2)
+        bar_chart.x_labels = vis[0]
+        bar_chart.add('Total pageviews', vis[1])
+        bar_chart.add('Unique visitors', vis[2])
+        bar_chart = bar_chart.render().decode('utf-8')
+
+
+
+        return {'daily_user_chart': bar_chart}
 
     app = web.Application()
 
@@ -41,17 +49,7 @@ async def site_factory(wampsess):
     await loop.create_server(app.make_handler(), '127.0.0.1', 5001)
 
 
-class AnalyticsComponent(ApplicationSession):
-    def __init__(self, config=None):
-        ApplicationSession.__init__(self, config)
-        logger.info("component created")
-
-    def onConnect(self):
-        logger.info("transport connected")
-        self.join(self.config.realm)
-
-    def onChallenge(self, challenge):
-        logger.info("authentication challenge received")
+class AnalyticsComponent(BackendAppSession):
 
     async def onJoin(self, details):
         logger.info("session joined")
@@ -80,13 +78,6 @@ class AnalyticsComponent(ApplicationSession):
                       RegisterOptions(details_arg='details'))
 
         await site_factory(self)
-
-    # def onLeave(self, details):
-    #     print("session left")
-    #
-    def onDisconnect(self):
-        logger.warn("transport disconnected, stopping event loop...")
-        asyncio.get_event_loop().stop()
 
 
 if __name__=="__main__":

@@ -4,22 +4,12 @@ import asyncio
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
 from .db import Db
-from ..utils import getLogger
+from ..utils import BackendAppSession, getLogger
 
 logger = getLogger('messages.main')
 
 
-class MessagesComponent(ApplicationSession):
-    def __init__(self, config=None):
-        ApplicationSession.__init__(self, config)
-        logger.info("component created")
-
-    # def onConnect(self):
-    #     logger.info("transport connected")
-    #     self.join(self.config.realm)
-
-    def onChallenge(self, challenge):
-        logger.info("authentication challenge received")
+class MessagesComponent(BackendAppSession):
 
     async def onJoin(self, details):
         logger.info("session joined")
@@ -72,13 +62,6 @@ class MessagesComponent(ApplicationSession):
                 raise Warning("No update received for message %s", msgjson)
 
         self.register(insertmsg, 'at.messages.insertmsg')
-
-    # def onLeave(self, details):
-    #     logger.info("session left")
-    #
-    def onDisconnect(self):
-        logger.warn("transport disconnected, stopping event loop...")
-        asyncio.get_event_loop().stop()
 
 
 if __name__=="__main__":

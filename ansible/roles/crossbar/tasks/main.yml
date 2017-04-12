@@ -35,3 +35,9 @@
     # Start on boot
     enabled: yes
     state: started
+
+- name: store crossbar authentication ticket for services
+  lineinfile:
+    dest: /etc/environment
+    # Generates new password when not exists
+    line: "AT_CROSSBAR_TICKET={{lookup('password', 'passwdlookup/crossbar-ticket-passwd.txt')}}"

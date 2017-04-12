@@ -1,9 +1,12 @@
-import json
+import os
 import uuid
+import json
+import asyncio
 import logging
 import datetime
 
 from hashids import Hashids
+from autobahn.asyncio.wamp import ApplicationSession
 
 
 def getLogger(name):
@@ -13,6 +16,9 @@ def getLogger(name):
         format='%(levelname)7s: %(asctime)s %(name)s:%(funcName)s:%(lineno)s %(message)s'
     )
     return logging.getLogger(name)
+
+
+logger = getLogger('utils')
 
 
 async def record_to_json(record, exclude=set()):
@@ -49,3 +55,27 @@ async def friendly_auth_code():
     "Generate friendly uppercase code of length 5"
     h = Hashids(salt=str(uuid.uuid4()), min_length=5, alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
     return h.encode(456)[:5]
+
+
+class BackendAppSession(ApplicationSession):
+    def __init__(self, config=None):
+        ApplicationSession.__init__(self, config)
+        logger.info("component created")
+
+    def onConnect(self):
+        logger.info("transport connected")
+        self.join(self.config.realm, [u"ticket"], 'backend')
+
+    def onChallenge(self, challenge):
+        logger.info("authentication challenge received")
+        if challenge.method == u"ticket":
+            return os.environ['AT_CROSSBAR_TICKET']
+        else:
+            raise Exception("Invalid auth method %s", challenge.method)
+
+    # def onLeave(self, details):
+    #     print("session left")
+    #
+    def onDisconnect(self):
+        logger.warn("transport disconnected, stopping event loop...")
+        asyncio.get_event_loop().stop()

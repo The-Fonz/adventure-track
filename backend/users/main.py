@@ -4,18 +4,12 @@ import asyncio
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
 from .db import Db
-from ..utils import getLogger
+from ..utils import BackendAppSession, getLogger
 
 logger = getLogger('users.main')
 
 
-class UsersComponent(ApplicationSession):
-    def __init__(self, config=None):
-        ApplicationSession.__init__(self, config)
-        logger.info("component created")
-
-    def onChallenge(self, challenge):
-        logger.info("authentication challenge received")
+class UsersComponent(BackendAppSession):
 
     async def onJoin(self, details):
         logger.info("session joined")
@@ -41,10 +35,6 @@ class UsersComponent(ApplicationSession):
         self.register(get_user_id_by_hash, 'at.users.get_user_id_by_hash')
         self.register(get_user_hash_by_id, 'at.users.get_user_hash_by_id')
         self.register(check_user_authcode, 'at.users.check_user_authcode')
-
-    def onDisconnect(self):
-        logger.warn("transport disconnected, stopping event loop...")
-        asyncio.get_event_loop().stop()
 
 
 if __name__=="__main__":
