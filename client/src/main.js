@@ -57,9 +57,9 @@ let overlay = new Ractive({
                 res = '360';
             }
             if (msg.video_versions) {
-                this.set('vidsrc', msg.video_versions[res]);
+                this.set('vidsrc', '/media/'+msg.video_versions[res]);
             } else if (msg.image_versions) {
-                this.set('imgsrc', msg.image_versions[res]);
+                this.set('imgsrc', '/media/'+msg.image_versions[res]);
             }
             this.set('visible', true);
             return false;

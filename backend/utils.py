@@ -77,5 +77,5 @@ class BackendAppSession(ApplicationSession):
     #     print("session left")
     #
     def onDisconnect(self):
-        logger.warn("transport disconnected, stopping event loop...")
+        logger.warning("transport disconnected, stopping event loop...")
         asyncio.get_event_loop().stop()

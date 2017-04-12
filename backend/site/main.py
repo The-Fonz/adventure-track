@@ -3,6 +3,7 @@ import asyncio
 from time import time
 import uuid
 
+import dateutil.parser
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp.exception import ApplicationError, TransportLost
 from aiohttp import web
@@ -32,10 +33,16 @@ async def site_factory(wampsess, middlewares):
         try:
             # Get n most recent messages, unique by user
             msgs = await wampsess.call('at.messages.uniquemsgs', n=5)
+            # Join user info
+            usrs = await asyncio.gather(*[wampsess.call('at.users.get_user_by_id', msg['user_id']) for msg in msgs])
+            for msg, usr in zip(msgs, usrs):
+                msg['user'] = usr
+            msg['timestamp'] = dateutil.parser.parse(msg['timestamp'])
+            logger.info(msgs)
         except ApplicationError:
             msgs = 'error'
             # Automatically prints exception information
-            logger.exception("Could not reach at.messages.fetchmsgs")
+            logger.exception("Could not reach other services")
         return {
             'adventures': [],
             'messages': msgs

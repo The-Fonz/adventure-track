@@ -7,7 +7,7 @@ import json
 import dateutil.parser
 import asyncpg
 from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, create_engine
-from sqlalchemy.dialects.postgresql import CHAR
+from sqlalchemy.dialects.postgresql import CHAR, JSONB
 
 from ..utils import record_to_json, friendlyhash, getLogger, friendly_auth_code
 
@@ -29,7 +29,10 @@ message = Table('users', metadata,
     Column('telephone_mobile', String(255), nullable=True),
     # Auth token for authentication, should be used together with id_hash
     # Take care not to expose it!
-    Column('auth_code', CHAR(8), nullable=True)
+    Column('auth_code', CHAR(8), nullable=True),
+    # Profile picture and resized versions
+    Column('profilepic_original', String(255), nullable=True),
+    Column('profilepic_versions', JSONB, nullable=True)
 )
 
 
@@ -56,15 +59,17 @@ class Db():
             await self.pool.release(conn)
         return out
 
+    async def get_user_by_id(self, user_id, existingconn=None):
+        conn = existingconn or self.pool
+        user = await conn.fetchrow('SELECT * FROM users WHERE id=$1', user_id)
+        return await record_to_json(user)
 
     async def getuser(self, id_hash, pass_auth_code=False, existingconn=None):
         "Get user in json format. Should never pass auth token, just for testing"
-        conn = existingconn or await self.pool.acquire()
+        conn = existingconn or self.pool
         user = await conn.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
         if not user:
             return None
-        if not existingconn:
-            await self.pool.release(conn)
         # Take care to make it a tuple to prevent making a set of letters
         exclude = set(('auth_code',)) if not pass_auth_code else set()
         return await record_to_json(user, exclude=exclude)

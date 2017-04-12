@@ -22,59 +22,57 @@ AdventureTrack - Share your adventure
 
 <section class="section">
     <div class="container">
+        <h1 class="title">
+            Recent messages
+        </h1>
         <div class="columns">
-
-            <div class="column">
-                <h1 class="title">
-                    Live adventures and races
-                </h1>
-                <div>
-                    {% for adv in adventures %}
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="column">
-                <h1 class="title">
-                    Recent messages
-                </h1>
-                <div>
-                    {% for msg in messages %}
-                    <a href="#">
-                        <div class="box">
-                          <article class="media">
+            {% for msg in messages %}
+            {% set user_page_url = '/u/'+msg.user.id_hash %}
+            <div class="column is-one-third-tablet is-one-quarter-desktop">
+                <div class="card">
+                    <div class="card-image">
+                        <a href="{{user_page_url}}">
+                            <figure class="image">
+                                {% if msg.image_versions %}
+                                <div class="imgthumbwrapper">
+                                    <img class="imgthumb" src="/media/{{msg.image_versions.thumb}}" />
+                                </div>
+                                {% endif %}
+                                {% if msg.video_versions %}
+                                <div class="vidthumbwrapper">
+                                    <img class="vidthumb" src="/media/{{msg.video_versions.thumb}}" />
+                                </div>
+                                {% endif %}
+                            </figure>
+                        </a>
+                    </div>
+                    <div class="card-content">
+                        <div class="media">
                             <div class="media-left">
-                              <figure class="image is-64x64">
-                                <img src="http://bulma.io/images/placeholders/128x128.png" alt="Image">
-                              </figure>
+                                <a href="{{user_page_url}}">
+                                    <figure class="image is-48x48">
+                                        <img src="http://bulma.io/images/placeholders/96x96.png" alt="Image">
+                                    </figure>
+                                </a>
                             </div>
                             <div class="media-content">
-                              <div class="content">
-                                <p>
-                                  <strong>John Smith</strong> <small>@johnsmith</small> <small>31m</small>
-                                  <br>
-                                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean efficitur sit amet massa fringilla egestas. Nullam condimentum luctus turpis.
-                                </p>
-                              </div>
-                              <nav class="level is-mobile">
-                                <div class="level-left">
-
-                                  <a class="level-item">
-                                    <span class="icon is-small"><i class="fa fa-retweet"></i></span>
-                                  </a>
-                                  <a class="level-item">
-                                    <span class="icon is-small"><i class="fa fa-heart"></i></span>
-                                  </a>
-                                </div>
-                              </nav>
+                                <a href="{{user_page_url}}">
+                                    <p class="title is-4">{{msg.user.first_name}} {{msg.user.last_name}}</p>
+                                    {#<p class="subtitle"><small><i class="fa fa-compass"></i> Somewhere in the world</small></p>#}
+                                </a>
                             </div>
-                          </article>
                         </div>
-                    </a>
-                    {% endfor %}
+
+                        <div class="content">
+                            {{msg.text}}
+                        </div>
+                    </div>
+                    <footer class="card-footer">
+                        <a href="{{user_page_url}}" class="card-footer-item">See more...</a>
+                    </footer>
                 </div>
             </div>
-
+            {% endfor %}
         </div>
     </div>
 </section>

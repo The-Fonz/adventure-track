@@ -13,7 +13,6 @@ adventure-track
 <link href='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet' />
 <!-- Local stylesheets -->
 <link href="/static/vis.css" rel="stylesheet" type="text/css" />
-<link href="/static/custom.css" rel="stylesheet" type="text/css" />
 {% endblock %}
 
 {% block base_body %}
@@ -34,50 +33,60 @@ adventure-track
 {% raw %}
 <template id="overlay-template">
     {{#if visible}}
-        <div fade-in class="background" on-click="@this.close()"></div>
-        <div fade-in class="overlay-modal">
-            <div class="exit" on-click="@this.close()">
-                <i class="fa fa-times-circle"></i>
-            </div>
-            <div class="content">
-                {{#if vidsrc}}
-                    <video autoplay controls src="{{vidsrc}}"></video>
-                {{/if}}
-                {{#if imgsrc}}
-                    <img src="{{imgsrc}}" />
-                {{/if}}
-            </div>
+    <div fade-in class="modal is-active">
+        <div class="modal-background" on-click="@this.close()"></div>
+        <div class="content">
+            {{#if vidsrc}}
+            <video autoplay controls src="{{vidsrc}}"></video>
+            {{/if}}
+            {{#if imgsrc}}
+            <img src="{{imgsrc}}" />
+            {{/if}}
         </div>
+        <button class="modal-close" on-click="@this.close()"></button>
+    </div>
     {{/if}}
 </template>
 
 <template id="blog-template">
     <div>
         {{#messages}}
-        <div fade-in="{duration: 800}" class="message" on-click="@this.select(this.id)">
-            <div class="meta">
-                <div class="time">
-                    {{this.timestamp.calendar(null,{sameElse: 'ddd MMM Do YYYY HH:mm'})}}
-                </div>
-                {{#if athlete}}
-                <div class="athlete">
-                    By: {{athlete.name}}
-                </div>
-                {{/if}}
+        <div fade-in="{duration: 800}" class="card message" on-click="@this.select(this.id)">
+            <div class="card-image">
+                <figure class="image">
+                    {{#if image_versions}}
+                    <div class="imgthumbwrapper">
+                        <img on-click="show" class="imgthumb" src="/media/{{image_versions.thumb}}" />
+                    </div>
+                    {{/if}}
+                    {{#if video_versions}}
+                    <div class="vidthumbwrapper">
+                        <img on-click="show" class="vidthumb" src="/media/{{video_versions.thumb}}" />
+                    </div>
+                    {{/if}}
+                </figure>
             </div>
-            {{#if text}}
-                <div class="text">{{this.text}}</div>
-            {{/if}}
-            {{#if image_versions}}
-                <div class="imgthumbwrapper" on-click="show">
-                    <img class="imgthumb" src="{{image_versions.thumb}}" />
+            <div class="card-content">
+                <div class="media">
+                    <div class="media-left">
+                        <figure class="image is-48x48">
+                            <img src="http://bulma.io/images/placeholders/96x96.png" alt="Image">
+                        </figure>
+                    </div>
+                    <div class="media-content">
+                        <p class="title is-4">{{this.athlete.name}}</p>
+                        <!--<p class="subtitle is-6">@johnsmith</p>-->
+                    </div>
                 </div>
-            {{/if}}
-            {{#if video_versions}}
-                <div class="vidthumbwrapper" on-click="show">
-                    <img class="vidthumb" src="{{video_versions.thumb}}" />
+
+                <div class="content">
+                    {{#if text}}
+                    {{this.text}}
+                    {{/if}}
+                    <br>
+                    <small>{{this.timestamp.calendar(null,{sameElse: 'ddd MMM Do YYYY HH:mm'})}}</small>
                 </div>
-            {{/if}}
+            </div>
         </div>
         {{/messages}}
     </div>

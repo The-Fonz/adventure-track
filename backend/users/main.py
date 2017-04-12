@@ -17,6 +17,9 @@ class UsersComponent(BackendAppSession):
         db = await Db.create()
         self.db = db
 
+        async def get_user_by_id(user_id):
+            return await db.get_user_by_id(user_id)
+
         async def get_user_by_hash(user_id_hash):
             return await db.getuser(user_id_hash)
 
@@ -31,6 +34,7 @@ class UsersComponent(BackendAppSession):
         async def check_user_authcode(user_id_hash, user_auth_code):
             return await db.check_auth(user_id_hash, user_auth_code)
 
+        self.register(get_user_by_id, 'at.users.get_user_by_id')
         self.register(get_user_by_hash, 'at.users.get_user_by_hash')
         self.register(get_user_id_by_hash, 'at.users.get_user_id_by_hash')
         self.register(get_user_hash_by_id, 'at.users.get_user_hash_by_id')

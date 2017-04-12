@@ -1,8 +1,4 @@
 /* General layout */
-body {
-    margin: 0;
-    font-family: Georgia, serif;
-}
 .leftpane {
     position: relative;
     float: left;
@@ -56,9 +52,13 @@ body {
     background: none;
 }
 
-.vis-item, .msg-marker, .imgthumbwrapper, .vidthumbwrapper  {
+.vis-item, .msg-marker {
     font-family: "FontAwesome";
     font-size: 30px;
+}
+.imgthumbwrapper, .vidthumbwrapper  {
+    font-family: "FontAwesome";
+    font-size: 80px;
 }
 .msg-marker {
     font-size: 20px;
@@ -81,7 +81,7 @@ body {
 
 .vis-item.msgtype-video:before,
 .msg-marker.msgtype-video:before,
-.message .vidthumbwrapper:after {
+.vidthumbwrapper:after {
     content: "";
 }
 .vis-item.msgtype-video:hover:before {
@@ -90,24 +90,24 @@ body {
 
 .vis-item.msgtype-image:before,
 .msg-marker.msgtype-image:before,
-.message .imgthumbwrapper:after {
+.imgthumbwrapper:after {
     content: "";
 }
 .vis-item.msgtype-image:hover:before {
     content: "";
 }
 /* Make image transparent to indicate that it is not full-res */
-.message img {
+.imgthumb, .vidthumb {
     opacity: .6;
 }
 /* Give :after element a non-standard positioned parent to relate to */
-.message .imgthumbwrapper,
-.message .vidthumbwrapper {
+.imgthumbwrapper,
+.vidthumbwrapper {
     position: relative;
 }
 /* Center icon */
-.message .imgthumbwrapper:after,
-.message .vidthumbwrapper:after {
+.imgthumbwrapper:after,
+.vidthumbwrapper:after {
     color: white;
     opacity: 1;
     position: absolute;
@@ -119,36 +119,8 @@ body {
 
 /* Overlay that shows video, images */
 /* Show above vis.Timeline 'now' line and mapbox attribution */
-#overlay > * {
-    z-index: 9999;
-}
-#overlay .background {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgba(0,0,0,.5);
-}
-#overlay .overlay-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%,-50%);
-    background: white;
-}
-#overlay .exit {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 40px;
-    /* Put above video */
-    margin-top: -50px;
-}
-#overlay .exit:hover {
-    cursor: pointer;
-}
 #overlay .content {
+    z-index: 999;
 }
 #overlay video, #overlay img {
     /* New viewport height/width units, supported by modern browsers.
@@ -159,25 +131,8 @@ body {
 
 /* Blog styling */
 .message .imgthumb, .message .vidthumb {
-    width: 80%;
-    margin: auto;
     cursor: pointer;
-    display: block;
 }
-.message {
-    text-align: center;
-    margin: 20px 10%;
+#blog {
+    padding: 10px;
 }
-.message .meta {
-    margin: 5px 0;
-}
-.message .time {
-    font-variant: small-caps;
-}
-.message .athlete {
-    font-style: italic;
-}
-.message .text {
-    margin-bottom: 8px;
-}
-
