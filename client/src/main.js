@@ -11,67 +11,13 @@ function widthMax(w) {
     return window.matchMedia(`(max-device-width: ${w}px)`).matches;
 }
 
+/*
+ * Wire up db, map and timeline
+ */
+
 let db = new Db();
 
 let map = new Map('map-view');
-
-let blog = new Ractive({
-    el: document.getElementById('blog'),
-    template: document.getElementById('blog-template').innerHTML,
-    transitions: {
-        fade: fade,
-    },
-    data: {
-        // Make sure that messages have an id to keep same dom elements
-        messages: db.messages,
-    },
-    modifyArrays: true,
-    highlight: function (id) {
-        console.log("Highlight msg "+ id);
-    }
-});
-
-let overlay = new Ractive({
-    el: document.getElementById('overlay'),
-    template: document.getElementById('overlay-template').innerHTML,
-    transitions: {
-        fade: fade,
-    },
-    data: {
-        visible: false,
-        vidsrc: null,
-        imgsrc: null
-    },
-    oninit: function() {
-        // Event.get() is msg obj
-        blog.on('show', (event) => {
-            let msg = event.get();
-            // Clear vid/img
-            this.set('vidsrc', null);
-            this.set('imgsrc', null);
-            let res = '1080';
-            // Do basic content resolution selection based on device width
-            if (widthMax(1400)) {
-                res = '720';
-            } else if (widthMax(800)) {
-                res = '360';
-            }
-            if (msg.video_versions) {
-                this.set('vidsrc', '/media/'+msg.video_versions[res]);
-            } else if (msg.image_versions) {
-                this.set('imgsrc', '/media/'+msg.image_versions[res]);
-            }
-            this.set('visible', true);
-            return false;
-        });
-    },
-    close: function() {
-        // Stop video play
-
-        this.set('visible', false);
-    }
-});
-
 
 db.on('newTracks', (newTracks) => {
     map.updateTracks(newTracks);
@@ -122,54 +68,107 @@ connection.onopen = function (session, details) {
         db.msg_stream.receiveMsgs(msgs);
     }
 
-    session.call('at.messages.fetchmsgs', [uid]).then(receiveMsgHandler);
+    session.call('at.public.messages.fetchmsgs', [uid]).then(
+        // Receives response
+        receiveMsgHandler,
+        // Error handler
+        // TODO: Send to sentry (automatic?)
+        (err) => {
+            console.error("Error fetching messages");
+            let errmsg = "There was an error loading the messages. We've been notified!";
+            blog.set('messagesLoadError', errmsg);
+        }
+    );
 
     // Unpack list of args
     session.subscribe(`at.messages.user.${uid}`, args => receiveMsgHandler(args[0])).then(
         sub => console.log('subscribed to topic'),
         err => console.error('failed to subscribe')
     );
-
-
-    // PUBLISH an event
-    // session.publish('com.example.onhello', ['Hello from JavaScript (browser)']);
-
-    // REGISTER a procedure for remote calling
-    function mul2 (args) {
-        var x = args[0];
-        var y = args[1];
-        console.log("mul2() called with " + x + " and " + y);
-        return x * y;
-    }
-    session.register('com.example.mul2', mul2).then(
-        function (reg) {
-            console.log('procedure registered');
-        },
-        function (err) {
-            console.log('failed to register procedure', err);
-        }
-    );
-
-    // CALL a remote procedure
-    // session.call('com.example.add2', [x, 18]).then(
-    //         function (res) {
-    //             console.log("add2() result:", res);
-    //         },
-    //         function (err) {
-    //             console.log("add2() error:", err);
-    //         }
-    //     );
 };
 
 // fired when connection was lost (or could not be established)
-//
 connection.onclose = function (reason, details) {
     console.log("Connection lost: " + reason);
-}
+};
 
 // now actually open the connection
-//
 connection.open();
+
+/*
+ * RACTIVE
+ */
+function sendAnalyticsEvent(evt) {
+    // Assume session has been instantiated
+    connection.session.call('at.public.analytics.insert_event', [evt]);
+}
+
+let blog = new Ractive({
+    el: document.getElementById('blog'),
+    template: document.getElementById('blog-template').innerHTML,
+    transitions: {
+        fade: fade,
+    },
+    data: {
+        // Make sure that messages have an id to keep same dom elements
+        messages: db.messages,
+        // Keys are message id's
+        likes: {},
+        // Can be set externally
+        messagesLoadError: null
+    },
+    modifyArrays: true,
+    highlight: function (id) {
+        console.log("Highlight msg "+ id);
+    },
+    like: function (msg_id) {
+        // Set keypath corresponding to likes[msg_id]
+        this.set('likes.'+msg_id, true);
+        let evt = {'type': 'msglike', 'extra': {'msg_id': msg_id}};
+        sendAnalyticsEvent(evt);
+    }
+});
+
+let overlay = new Ractive({
+    el: document.getElementById('overlay'),
+    template: document.getElementById('overlay-template').innerHTML,
+    transitions: {
+        fade: fade,
+    },
+    data: {
+        visible: false,
+        vidsrc: null,
+        imgsrc: null
+    },
+    oninit: function() {
+        // Event.get() is msg obj
+        blog.on('show', (event) => {
+            let msg = event.get();
+            // Clear vid/img
+            this.set('vidsrc', null);
+            this.set('imgsrc', null);
+            let res = '1080';
+            // Do basic content resolution selection based on device width
+            if (widthMax(1400)) {
+                res = '720';
+            } else if (widthMax(800)) {
+                res = '360';
+            }
+            if (msg.video_versions) {
+                this.set('vidsrc', '/media/'+msg.video_versions[res]);
+            } else if (msg.image_versions) {
+                this.set('imgsrc', '/media/'+msg.image_versions[res]);
+            }
+            this.set('visible', true);
+            return false;
+        });
+    },
+    close: function() {
+        // Stop video play
+
+        this.set('visible', false);
+    }
+});
 
 // Export for use in main-test
 export {db, map, blog, overlay, timeline};

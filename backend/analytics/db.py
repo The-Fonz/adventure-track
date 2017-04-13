@@ -15,15 +15,15 @@ CREATE TABLE analytics_events
     id SERIAL PRIMARY KEY,
     received TIMESTAMP,
 
-    event_type TEXT,
-    user_id TEXT,
-    browser_id TEXT,
+    event_type VARCHAR(255),
+    user_id VARCHAR(255),
+    browser_id VARCHAR(255),
 
-    request_url TEXT,
+    request_url VARCHAR(2048),
     request_ip INET,
-    request_method TEXT,
-    request_referer TEXT,
-    request_user_agent TEXT,
+    request_method VARCHAR(255),
+    request_referer VARCHAR(2048),
+    request_user_agent VARCHAR(2048),
 
     response_status INTEGER,
     response_length INTEGER,

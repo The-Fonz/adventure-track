@@ -1,3 +1,5 @@
+import re
+import json
 import signal
 import asyncio
 
@@ -62,19 +64,43 @@ class AnalyticsComponent(BackendAppSession):
 
         self.register(insert_event, 'at.analytics.insert_event')
 
-        async def log_analytics_event_fromwamp(details, evt):
+        async def public_insert_event(browser_evt, details):
             "Event logging for browser. Returns True if succeeded"
+            evt = []
             try:
                 session = await self.call('wamp.session.get', details.caller)
-                peer = session['transport']['peer']
-                # TODO: Create event
-                await log_analytics_event(evt)
+                h = session['transport']['http_headers_received']
+                # Convert all keys to lowercase, just in case (pun intended)
+                h = dict((k.lower(), v) for k,v in h.items())
+                evt += [browser_evt['type']]
+                # user_id is None
+                evt += [None]
+                # browser_id
+                browser_id = None
+                # First get cookie or empty string and eliminate whitespace
+                try: browser_id = re.search('browser_id=([\d\w-]*);?', h.get('cookie','').replace(' ', '')).group(1)
+                # No group
+                except (IndexError, AttributeError): pass
+                evt += [browser_id]
+                # request_url, request_ip, request_method
+                evt += [None, h['x-real-ip'], 'websocket']
+                # request_referer, request_user_agent
+                evt += [h.get('referer'), h['user-agent']]
+                # response_status, response_length, response_time_taken
+                evt += [None, None, None]
+                # extra: JSON object with more info
+                extra = browser_evt.get('extra', None)
+                if extra: extra = json.dumps(extra)
+                # Avoid filling up db, limit to 100kB
+                if len(extra) > 1E5: raise Exception("evt['extra'] json is too large")
+                evt += [extra]
+                await self.db.insert_event(evt)
                 return True
             except Exception:
                 logger.exception("Something went wrong when trying to construct or log analytics event")
                 return False
 
-        self.register(log_analytics_event_fromwamp, 'at.site.log_analytics_event_fromwamp',
+        self.register(public_insert_event, 'at.public.analytics.insert_event',
                       RegisterOptions(details_arg='details'))
 
         await site_factory(self)

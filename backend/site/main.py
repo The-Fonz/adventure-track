@@ -38,7 +38,7 @@ async def site_factory(wampsess, middlewares):
             for msg, usr in zip(msgs, usrs):
                 msg['user'] = usr
             msg['timestamp'] = dateutil.parser.parse(msg['timestamp'])
-            logger.info(msgs)
+            # logger.info(msgs)
         except ApplicationError:
             msgs = 'error'
             # Automatically prints exception information
@@ -89,19 +89,10 @@ class SiteComponent(BackendAppSession):
                 # Serialize event to logs
                 logger.info("Event: %s", evt)
 
-        async def create_analytics_event(request, resp, t):
+        async def create_analytics_event(request, resp, t, browser_id):
             "Create analytics event from request and response objects, then send it"
             try:
                 rh = request.headers
-                # Get cookie if present
-                browser_id = request.cookies.get('browser_id')
-                if browser_id and len(browser_id) != 36:
-                    logger.warn("Invalid browser ID: %s", browser_id)
-                    browser_id = None
-                # Generate browser id if not present
-                if not browser_id:
-                    browser_id = str(uuid.uuid4())
-                    resp.set_cookie("browser_id", browser_id, max_age=3153600000)
                 evt = [
                     # event_type
                     "pageview",
@@ -140,10 +131,19 @@ class SiteComponent(BackendAppSession):
                 resp = await handler(request)
                 t2 = time()
                 try:
+                    # Get cookie if present
+                    browser_id = request.cookies.get('browser_id')
+                    if browser_id and len(browser_id) != 36:
+                        logger.warning("Invalid browser ID: %s", browser_id)
+                        browser_id = None
+                    # Generate browser id if not present or invalid
+                    if not browser_id:
+                        browser_id = str(uuid.uuid4())
+                        resp.set_cookie("browser_id", browser_id, max_age=3153600000)
                     # Schedule but don't wait for it
-                    asyncio.ensure_future(create_analytics_event(request, resp, t2-t1))
+                    asyncio.ensure_future(create_analytics_event(request, resp, t2-t1, browser_id))
                 except Exception:
-                    logger.exception("Failed to schedule create_analytics_event")
+                    logger.exception("Failed to make cookie or schedule create_analytics_event")
                 # Always send response
                 finally:
                     return resp

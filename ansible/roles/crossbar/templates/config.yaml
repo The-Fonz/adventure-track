@@ -20,15 +20,15 @@ workers:
         cache: true
     - name: frontend
       permissions:
-      - uri: 'at.messages.fetchmsgs'
-        match: exact
+      - uri: 'at.public.'
+        match: prefix
         allow:
           call: true
           register: false
           publish: false
           subscribe: false
         disclose:
-          caller: false
+          caller: true
           publisher: false
         cache: true
       - uri: 'at.messages.user.'
@@ -58,5 +58,5 @@ workers:
             type: static
             principals:
               backend:
-                ticket: "${AT_INTERNAL_TICKET}"
+                ticket: "${AT_CROSSBAR_TICKET}"
                 role: backend

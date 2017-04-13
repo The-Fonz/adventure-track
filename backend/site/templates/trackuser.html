@@ -50,8 +50,14 @@ adventure-track
 
 <template id="blog-template">
     <div>
+        {{#messagesLoadError}}
+        <div class="notification is-danger">
+          <button class="delete" on-click="@this.set('messagesLoadError', null)"></button>
+          {{messagesLoadError}}
+        </div>
+        {{/messagesLoadError}}
         {{#messages}}
-        <div fade-in="{duration: 800}" class="card message" on-click="@this.select(this.id)">
+        <div fade-in="{duration: 800}" class="card message">
             <div class="card-image">
                 <figure class="image">
                     {{#if image_versions}}
@@ -80,13 +86,18 @@ adventure-track
                 </div>
 
                 <div class="content">
-                    {{#if text}}
                     {{this.text}}
-                    {{/if}}
                     <br>
                     <small>{{this.timestamp.calendar(null,{sameElse: 'ddd MMM Do YYYY HH:mm'})}}</small>
                 </div>
             </div>
+            <footer class="card-footer">
+                <p on-click="@this.like(this.id)" class-liked="{{likes[this.id]}}" class="card-footer-item msglike">
+                    <span>
+                        <i class="fa fa-heart" aria-hidden="true"></i>
+                    </span>
+                </p>
+            </footer>
         </div>
         {{/messages}}
     </div>

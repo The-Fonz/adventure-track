@@ -98,3 +98,7 @@ ENV/
 *.retry
 bundle.js
 node_modules/
+
+ansible/passwdlookup/
+
+hello/

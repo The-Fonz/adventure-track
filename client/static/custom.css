@@ -130,9 +130,12 @@
 }
 
 /* Blog styling */
-.message .imgthumb, .message .vidthumb {
+.message .imgthumb, .message .vidthumb, .message .msglike {
     cursor: pointer;
 }
 #blog {
     padding: 10px;
+}
+.msglike.liked {
+    color: red;
 }

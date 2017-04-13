@@ -26,7 +26,7 @@ class MessagesComponent(BackendAppSession):
             user_id = await self.call('at.users.get_user_id_by_hash', user_id_hash)
             return await db.getmsgs(user_id)
 
-        self.register(fetchmsgs, 'at.messages.fetchmsgs')
+        self.register(fetchmsgs, 'at.public.messages.fetchmsgs')
 
         async def insertmsg(msgjson):
             logger.debug("Inserting message...")
