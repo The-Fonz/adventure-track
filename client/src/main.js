@@ -100,7 +100,9 @@ connection.open();
  */
 function sendAnalyticsEvent(evt) {
     // Assume session has been instantiated
-    connection.session.call('at.public.analytics.insert_event', [evt]);
+    connection.session.call('at.public.analytics.insert_event', [evt])
+        // TODO: Send to Sentry
+        .catch(err => console.error("Failed to send analytics event"));
 }
 
 let blog = new Ractive({
@@ -144,6 +146,7 @@ let overlay = new Ractive({
         // Event.get() is msg obj
         blog.on('show', (event) => {
             let msg = event.get();
+            sendAnalyticsEvent({'type': 'msgclick', 'extra': {'msg_id': msg.id}});
             // Clear vid/img
             this.set('vidsrc', null);
             this.set('imgsrc', null);

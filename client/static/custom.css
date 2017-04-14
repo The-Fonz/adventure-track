@@ -1,4 +1,7 @@
 /* General layout */
+body {
+    overflow: auto;
+}
 .leftpane {
     position: relative;
     float: left;
@@ -9,7 +12,7 @@
     float: right;
     width: 36%;
     height: 100%;
-    overflow: scroll;
+    overflow-y: scroll;
 }
 
 /*

@@ -2,6 +2,7 @@ import EventEmitter from 'events';
 import clone from 'lodash/clone';
 import moment from 'moment';
 import forEach from 'lodash/forEach';
+import findIndex from 'lodash/findIndex';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import {Athlete_stream, Msg_stream, Track_stream} from './datastreams.js';
 
@@ -35,14 +36,22 @@ class Db extends EventEmitter {
             // Insert at proper place, do not assume times are sequential
             forEach(newMsgs, (m) => {
                 let cleanm = this._cleanMsg(m);
-                cleanm = this._joinMsgAthlete(cleanm);
                 cleanm = this._addMsgLocation(cleanm);
                 cleanedMsgs.push(cleanm);
-                // Use inverse unix timestamp (in seconds)
-                let insertAt = sortedIndexBy(this.messages, cleanm,
-                       elem => -elem.timestamp.unix());
-                // Delete 0
-                this.messages.splice(insertAt, 0, cleanm);
+                // Find out if there's an existing msg with this id
+                let insertAt = findIndex(this.messages, msg => msg.id===cleanm.id);
+                // Insert msg at original msg's place
+                if (insertAt !== -1) {
+                    // Delete 1
+                    this.messages.splice(insertAt, 1, cleanm);
+                // Insert msg at correct place sorted by datetime
+                } else {
+                    // Use inverse unix timestamp (in seconds)
+                    insertAt = sortedIndexBy(this.messages, cleanm,
+                           elem => -elem.timestamp.unix());
+                    // Delete 0
+                    this.messages.splice(insertAt, 0, cleanm);
+                }
             });
             // Not guaranteed to be sorted correctly
             this.emit('newMsgs', cleanedMsgs);
@@ -96,17 +105,6 @@ class Db extends EventEmitter {
         out['className'] = 'msgtype-' + msgType;
         out.content = "";
         return out;
-    }
-
-    /**
-     * Join athlete with msg
-     */
-    _joinMsgAthlete(msg) {
-        let a = this.athletes[msg.user_id];
-        if (a) {
-            msg.athlete = a;
-        }
-        return msg;
     }
 
     /**
