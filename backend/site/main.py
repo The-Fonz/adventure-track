@@ -40,12 +40,15 @@ async def site_factory(wampsess, middlewares):
             msg['timestamp'] = dateutil.parser.parse(msg['timestamp'])
             # logger.info(msgs)
         except ApplicationError:
-            msgs = 'error'
+            msgs = []
+            msgsLoadError = "There was an error while retrieving messages. We've been notified!"
+            # TODO: Log to Sentry
             # Automatically prints exception information
             logger.exception("Could not reach other services")
         return {
             'adventures': [],
-            'messages': msgs
+            'messages': msgs,
+            'msgsLoadError': msgsLoadError
         }
 
     async def trackuser(request):

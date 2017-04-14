@@ -26,6 +26,11 @@ AdventureTrack - Share your adventure
             Recent messages
         </h1>
         <div class="columns">
+            {% if msgsLoadError %}
+            <div class="notification is-danger">
+              {{msgsLoadError}}
+            </div>
+            {% endif %}
             {% for msg in messages %}
             {% set user_page_url = '/u/'+msg.user.id_hash %}
             <div class="column is-one-third-tablet is-one-quarter-desktop">
