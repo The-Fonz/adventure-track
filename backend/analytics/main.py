@@ -3,7 +3,6 @@ import json
 import signal
 import asyncio
 
-from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp.types import RegisterOptions
 from aiohttp import web
 import aiohttp_jinja2
@@ -107,23 +106,4 @@ class AnalyticsComponent(BackendAppSession):
 
 
 if __name__=="__main__":
-
-    l = asyncio.get_event_loop()
-
-    runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
-
-    protocol = runner.run(AnalyticsComponent, start_loop=False)
-
-    l.add_signal_handler(signal.SIGINT, l.stop)
-    l.add_signal_handler(signal.SIGTERM, l.stop)
-
-    l.run_forever()
-    logger.info("Loop stopped")
-
-    # Clean up stuff after loop stops
-    # if protocol._session:
-    #     print("Running protocol session leave")
-    #     l.run_until_complete(protocol._session.leave())
-
-    l.close()
-    logger.info("Loop closed")
+    AnalyticsComponent.run_forever()

@@ -205,6 +205,5 @@ if __name__=="__main__":
                 l.run_until_complete(asyncio.wait(coros))
                 logger.info("Inserted all users")
         finally:
-            l.run_until_complete(l.shutdown_asyncgens())
             l.close()
         logger.info("Completed successfully")

@@ -114,7 +114,6 @@ if __name__=="__main__":
         try:
             l.run_until_complete(test_db_basics(db))
         finally:
-            l.run_until_complete(l.shutdown_asyncgens())
             l.close()
         logger.info("Completed successfully")
 

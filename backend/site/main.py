@@ -155,24 +155,4 @@ class SiteComponent(BackendAppSession):
 
 
 if __name__=="__main__":
-
-    l = asyncio.get_event_loop()
-
-    runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
-    # ApplicationRunner starts asyncio loop, and adds SIGTERM handler
-    # Takes standard event loop
-    protocol = runner.run(SiteComponent, start_loop=False)
-
-    l.add_signal_handler(signal.SIGINT, l.stop)
-    l.add_signal_handler(signal.SIGTERM, l.stop)
-
-    l.run_forever()
-    logger.info("Loop stopped")
-
-    # Clean up stuff after loop stops
-    # if protocol._session:
-    #     print("Running protocol session leave")
-    #     l.run_until_complete(protocol._session.leave())
-
-    l.close()
-    logger.info("Loop closed")
+    SiteComponent.run_forever()

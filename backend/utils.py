@@ -1,12 +1,14 @@
 import os
 import uuid
 import json
+import signal
 import asyncio
 import logging
 import datetime
 
+
 from hashids import Hashids
-from autobahn.asyncio.wamp import ApplicationSession
+from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
 
 def getLogger(name):
@@ -79,3 +81,28 @@ class BackendAppSession(ApplicationSession):
     def onDisconnect(self):
         logger.warning("transport disconnected, stopping event loop...")
         asyncio.get_event_loop().stop()
+
+    @classmethod
+    def run_forever(cls, stopcallback=None):
+        """
+        Convenience method to avoid repetition.
+        Pass a stopcallback to finish work or queues, gets called just before loop is closed,
+        with protocol as single argument.
+        """
+        l = asyncio.get_event_loop()
+
+        runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
+
+        protocol = runner.run(cls, start_loop=False)
+
+        l.add_signal_handler(signal.SIGINT, l.stop)
+        l.add_signal_handler(signal.SIGTERM, l.stop)
+
+        l.run_forever()
+        logger.info("Loop stopped")
+
+        if stopcallback:
+            stopcallback(protocol)
+
+        l.close()
+        logger.info("Loop closed")

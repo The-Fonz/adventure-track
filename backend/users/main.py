@@ -42,23 +42,4 @@ class UsersComponent(BackendAppSession):
 
 
 if __name__=="__main__":
-
-    l = asyncio.get_event_loop()
-
-    runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
-    protocol = runner.run(UsersComponent, start_loop=False)
-
-    l.add_signal_handler(signal.SIGINT, l.stop)
-    l.add_signal_handler(signal.SIGTERM, l.stop)
-
-    l.run_forever()
-    logger.info("Loop stopped")
-
-    # Clean up stuff after loop stops
-    # if protocol._session:
-    #     logger.info("Running protocol session leave")
-    #     l.run_until_complete(protocol._session.leave())
-
-    l.run_until_complete(l.shutdown_asyncgens())
-    l.close()
-    logger.info("Loop closed")
+    UsersComponent.run_forever()

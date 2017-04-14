@@ -31,23 +31,12 @@ class TelegramComponent(BackendAppSession):
 
 
 if __name__=="__main__":
+    def stopcallback(protocol):
+        # Clean up stuff if active session
+        if protocol._session:
+            logger.info("Stopping Telegram bot updater...")
+            protocol._session.updater.stop()
+        #     logger.info("Running protocol session leave")
+        #     l.run_until_complete(protocol._session.leave())
 
-    l = asyncio.get_event_loop()
-
-    runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
-    protocol = runner.run(TelegramComponent, start_loop=False)
-
-    l.add_signal_handler(signal.SIGINT, l.stop)
-    l.add_signal_handler(signal.SIGTERM, l.stop)
-
-    l.run_forever()
-    logger.info("Loop stopped")
-
-    # Clean up stuff if active session
-    if protocol._session:
-        protocol._session.updater.stop()
-    #     logger.info("Running protocol session leave")
-    #     l.run_until_complete(protocol._session.leave())
-
-    l.close()
-    logger.info("Loop closed")
+    TelegramComponent.run_forever(stopcallback=stopcallback)
