@@ -5,14 +5,13 @@ adventure-track
 {% endblock %}
 
 {% block head %}
-{{ super() }}
+<link href="/static/vis.css" rel="stylesheet" type="text/css" />
 {# Prevent zoom #}
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
 <link href="http://vjs.zencdn.net/5.17.0/video-js.css" rel="stylesheet">
 <link href='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet' />
-<!-- Local stylesheets -->
-<link href="/static/vis.css" rel="stylesheet" type="text/css" />
+{# Allow stylesheets to be overridden by parent ones #}
+{{ super() }}
 {% endblock %}
 
 {% block base_body %}
@@ -60,14 +59,14 @@ adventure-track
         <div fade-in="{duration: 800}" class="card message">
             <div class="card-image">
                 <figure class="image">
-                    {{#if image_versions}}
+                    {{#if media.image}}
                     <div class="imgthumbwrapper">
-                        <img on-click="show" class="imgthumb" src="/media/{{image_versions.thumb}}" />
+                        <img on-click="show" class="imgthumb" src="/media/{{media.image.thumb.path}}" />
                     </div>
                     {{/if}}
-                    {{#if video_versions}}
+                    {{#if media.video}}
                     <div class="vidthumbwrapper">
-                        <img on-click="show" class="vidthumb" src="/media/{{video_versions.thumb}}" />
+                        <img on-click="show" class="vidthumb" src="/media/{{media.video.thumb.path}}" />
                     </div>
                     {{/if}}
                 </figure>

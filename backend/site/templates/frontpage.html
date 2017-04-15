@@ -30,54 +30,57 @@ AdventureTrack - Share your adventure
             <div class="notification is-danger">
               {{msgsLoadError}}
             </div>
-            {% endif %}
-            {% for msg in messages %}
-            {% set user_page_url = '/u/'+msg.user.id_hash %}
-            <div class="column is-one-third-tablet is-one-quarter-desktop">
-                <div class="card">
-                    <div class="card-image">
-                        <a href="{{user_page_url}}">
-                            <figure class="image">
-                                {% if msg.image_versions %}
-                                <div class="imgthumbwrapper">
-                                    <img class="imgthumb" src="/media/{{msg.image_versions.thumb}}" />
-                                </div>
-                                {% endif %}
-                                {% if msg.video_versions %}
-                                <div class="vidthumbwrapper">
-                                    <img class="vidthumb" src="/media/{{msg.video_versions.thumb}}" />
-                                </div>
-                                {% endif %}
-                            </figure>
-                        </a>
-                    </div>
-                    <div class="card-content">
-                        <div class="media">
-                            <div class="media-left">
-                                <a href="{{user_page_url}}">
-                                    <figure class="image is-48x48">
-                                        <img src="http://bulma.io/images/placeholders/96x96.png" alt="Image">
-                                    </figure>
-                                </a>
-                            </div>
-                            <div class="media-content">
-                                <a href="{{user_page_url}}">
-                                    <p class="title is-4">{{msg.user.first_name}} {{msg.user.last_name}}</p>
-                                    {#<p class="subtitle"><small><i class="fa fa-compass"></i> Somewhere in the world</small></p>#}
-                                </a>
-                            </div>
+            {% else %}
+                {% for msg in messages %}
+                {% set user_page_url = '/u/'+msg.user.id_hash %}
+                <div class="column is-one-third-tablet is-one-quarter-desktop">
+                    <div class="card">
+                        <div class="card-image">
+                            <a href="{{user_page_url}}">
+                                <figure class="image">
+                                    {% if msg.media %}
+                                        {% if msg.media.image and msg.media.image.thumb %}
+                                        <div class="imgthumbwrapper">
+                                            <img class="imgthumb" src="/media/{{msg.media.image.thumb.path}}" />
+                                        </div>
+                                        {% endif %}
+                                        {% if msg.media.video and msg.media.video.thumb %}
+                                        <div class="vidthumbwrapper">
+                                            <img class="vidthumb" src="/media/{{msg.media.image.thumb.path}}" />
+                                        </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </figure>
+                            </a>
                         </div>
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-left">
+                                    <a href="{{user_page_url}}">
+                                        <figure class="image is-48x48">
+                                            <img src="http://bulma.io/images/placeholders/96x96.png" alt="Image">
+                                        </figure>
+                                    </a>
+                                </div>
+                                <div class="media-content">
+                                    <a href="{{user_page_url}}">
+                                        <p class="title is-4">{{msg.user.first_name}} {{msg.user.last_name}}</p>
+                                        {#<p class="subtitle"><small><i class="fa fa-compass"></i> Somewhere in the world</small></p>#}
+                                    </a>
+                                </div>
+                            </div>
 
-                        <div class="content">
-                            {{msg.text}}
+                            <div class="content">
+                                {{msg.text}}
+                            </div>
                         </div>
+                        <footer class="card-footer">
+                            <a href="{{user_page_url}}" class="card-footer-item">See more...</a>
+                        </footer>
                     </div>
-                    <footer class="card-footer">
-                        <a href="{{user_page_url}}" class="card-footer-item">See more...</a>
-                    </footer>
                 </div>
-            </div>
-            {% endfor %}
+                {% endfor %}
+            {% endif %}
         </div>
     </div>
 </section>

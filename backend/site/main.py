@@ -1,10 +1,8 @@
-import signal
 import asyncio
 from time import time
 import uuid
 
 import dateutil.parser
-from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp.exception import ApplicationError, TransportLost
 from aiohttp import web
 import aiohttp_jinja2
@@ -29,7 +27,9 @@ async def site_factory(wampsess, middlewares):
     """
     @aiohttp_jinja2.template('frontpage.html')
     async def frontpage(request):
-        # name = request.match_info.get('name', 'Anonymous')
+        msgs = []
+        msgsLoadError = ''
+        adventures = []
         try:
             # Get n most recent messages, unique by user
             msgs = await wampsess.call('at.messages.uniquemsgs', n=5)
@@ -40,13 +40,12 @@ async def site_factory(wampsess, middlewares):
             msg['timestamp'] = dateutil.parser.parse(msg['timestamp'])
             # logger.info(msgs)
         except ApplicationError:
-            msgs = []
             msgsLoadError = "There was an error while retrieving messages. We've been notified!"
             # TODO: Log to Sentry
             # Automatically prints exception information
             logger.exception("Could not reach other services")
         return {
-            'adventures': [],
+            'adventures': adventures,
             'messages': msgs,
             'msgsLoadError': msgsLoadError
         }

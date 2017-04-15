@@ -6,7 +6,6 @@ import asyncio
 import logging
 import datetime
 
-
 from hashids import Hashids
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
@@ -23,11 +22,26 @@ def getLogger(name):
 logger = getLogger('utils')
 
 
-async def record_to_json(record, exclude=set()):
+async def record_to_dict(record, exclude=set(), parse_media=True):
     "Transform record to json, exclude keys if needed"
     out = {}
     for k,v in record.items():
-        if k not in exclude:
+        # Parse media
+        if k == 'media' and parse_media:
+            ml = json.loads(v)
+            mo = dict()
+            for m in ml:
+                typ = m['type']
+                if not mo.get(typ):
+                    mo[typ] = dict()
+                # {<media_type>: {<conf_name>: {...}}, ...}
+                conf_name = m['conf_name']
+                # Exclude None config names
+                if conf_name:
+                    # Exclude sensitive keys in media dict as well
+                    mo[typ][conf_name] = {k:v for k,v in m.items() if k not in exclude}
+            out[k] = mo
+        elif k not in exclude:
             # Parse json
             if type(v) == str and v.strip().startswith('{'):
                 v = json.loads(v)
@@ -37,12 +51,12 @@ async def record_to_json(record, exclude=set()):
             out[k] = v
     return out
 
-async def records_to_json(records, **kwargs):
+async def records_to_dict(records, **kwargs):
     "Converts list of asyncpg.Record to json"
     out = []
     # Can make async using await asyncio.sleep(0) but should be real fast
     for r in records:
-        out.append(await record_to_json(r, **kwargs))
+        out.append(await record_to_dict(r, **kwargs))
     return out
 
 
@@ -79,11 +93,13 @@ class BackendAppSession(ApplicationSession):
     #     print("session left")
     #
     def onDisconnect(self):
+        "Override this class when implementing custom cleanup logic"
         logger.warning("transport disconnected, stopping event loop...")
+        # TODO: Clean disconnect using .leave (gave some txaio error though)
         asyncio.get_event_loop().stop()
 
     @classmethod
-    def run_forever(cls, stopcallback=None):
+    def run_forever(cls):
         """
         Convenience method to avoid repetition.
         Pass a stopcallback to finish work or queues, gets called just before loop is closed,
@@ -101,8 +117,10 @@ class BackendAppSession(ApplicationSession):
         l.run_forever()
         logger.info("Loop stopped")
 
-        if stopcallback:
-            stopcallback(protocol)
+        # Must prevent a default as 3rd argument to avoid AttributeError
+        if getattr(protocol, '_session', None) and getattr(protocol._session, 'cleanup', None):
+            logger.info("Running cleanup method...")
+            l.run_until_complete(protocol._session.cleanup(l))
 
         l.close()
         logger.info("Loop closed")

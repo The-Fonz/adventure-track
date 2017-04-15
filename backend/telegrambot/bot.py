@@ -1,11 +1,13 @@
 import os
 import uuid
+import json
 import asyncio
 import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 from telegram.ext import Updater, CommandHandler, MessageHandler
 from telegram.ext.filters import Filters
+from autobahn.wamp.exception import ApplicationError
 
 from .replies import MSGS
 from ..utils import getLogger
@@ -66,8 +68,12 @@ def main(wampsess, loop):
     def onmsg(bot, update):
         mediapath = os.path.abspath(os.path.normpath(os.environ['AT_MEDIA_ROOT']))
         vid_root = os.path.join(mediapath, 'video_original')
+        img_root = os.path.join(mediapath, 'image_original')
+        aud_root = os.path.join(mediapath, 'audio_original')
         # Make dirs if non-existent
         os.makedirs(vid_root, exist_ok=True)
+        os.makedirs(img_root, exist_ok=True)
+        os.makedirs(aud_root, exist_ok=True)
         cid = update.message.chat_id
         telegram_user = update.message.from_user
         telegram_id = telegram_user.id
@@ -84,26 +90,41 @@ def main(wampsess, loop):
         t = update.message
         msg = dict()
         msg['text'] = t.text or t.caption
+        try:
+            msg['telegram_message'] = json.dumps(t.to_dict())
+        except Exception:
+            pass
         # Serialize to ISO format so WAMP can send it over the wire
         msg['timestamp'] = t.date.isoformat()
         msg['user_id'] = link['user_id']
         if t.video:
             vid = t.video
-            vidfile = bot.get_file(vid.file_id)
             reply = "Received vid of {}s resolution {}x{} mimetype {} filesize {:.2f}MB".format(vid.duration, vid.width, vid.height, vid.mime_type, vid.file_size/1E6)
-            logger.debug(t.video)
+            bot.sendMessage(chat_id=cid, text=reply)
+            vidfile = bot.get_file(vid.file_id)
             # Get original extension and remove leading dot (if any)
             ext = os.path.splitext(vidfile.file_path)[1].replace('.','')
-            bot.sendMessage(chat_id=cid, text=reply)
             fn = "{}_{}.{}".format(msg['timestamp'], uuid.uuid4(), ext)
             vidpath = os.path.join(vid_root, fn)
             vidfile.download(custom_path=vidpath)
             # Save path relative to media root, to avoid issues when moving stuff around
             msg['video_original'] = os.path.relpath(vidpath, start=mediapath)
             logger.debug("Saved video as {}".format(vidpath))
+        # Is PhotoSize array
         if t.photo:
-            logger.debug(t.photo)
-            bot.sendMessage(chat_id=cid, text="Received photo")
+            # Choose largest (is usually at the end, but scan all just to be sure)
+            maxwidth = 0
+            for p in t.photo:
+                if p.width > maxwidth:
+                    img = p
+            bot.sendMessage(chat_id=cid, text="Received {}x{} photo of {:.2f}MB".format(img.width, img.height, img.file_size/1E6))
+            imgfile = bot.get_file(img.file_id)
+            ext = os.path.splitext(imgfile.file_path)[1].replace('.', '')
+            fn = "{}_{}.{}".format(msg['timestamp'], uuid.uuid4(), ext)
+            imgpath = os.path.join(img_root, fn)
+            imgfile.download(custom_path=imgpath)
+            msg['image_original'] = os.path.relpath(imgpath, start=mediapath)
+            logger.debug("Saved img as {}".format(imgpath))
         if t.audio or t.voice:
             logger.debug(t.audio)
             logger.debug(t.voice)
@@ -111,10 +132,14 @@ def main(wampsess, loop):
         if t.location:
             logger.debug(t.location)
             bot.sendMessage(chat_id=cid, text="Location not supported yet")
-        fut = wampsess.call('at.messages.insertmsg', msg)
-        fut = runcoro(asyncio.wait_for(fut, 2))
-        bot.sendMessage(chat_id=cid, text="Your message was successfully saved")
-        logger.debug("Message inserted")
+        try:
+            fut = wampsess.call('at.messages.insertmsg', msg)
+            fut = runcoro(asyncio.wait_for(fut, 2))
+            logger.debug("Message inserted")
+            bot.sendMessage(chat_id=cid, text="Your message was successfully saved")
+        except (ApplicationError, asyncio.TimeoutError):
+            logger.exception("Failed inserting message")
+            bot.sendMessage(chat_id=cid, text="Your message could not be saved. We've been notified of this issue. Please try again later.")
 
 
     start_handler = CommandHandler('start', start, pass_args=True)

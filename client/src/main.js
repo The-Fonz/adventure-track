@@ -157,10 +157,10 @@ let overlay = new Ractive({
             } else if (widthMax(800)) {
                 res = '360';
             }
-            if (msg.video_versions) {
-                this.set('vidsrc', '/media/'+msg.video_versions[res]);
-            } else if (msg.image_versions) {
-                this.set('imgsrc', '/media/'+msg.image_versions[res]);
+            if (msg.media.video) {
+                this.set('vidsrc', '/media/'+msg.media.video[res].path);
+            } else if (msg.media.image) {
+                this.set('imgsrc', '/media/'+msg.media.image[res].path);
             }
             this.set('visible', true);
             return false;

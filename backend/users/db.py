@@ -9,7 +9,7 @@ import asyncpg
 from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, create_engine
 from sqlalchemy.dialects.postgresql import CHAR, JSONB
 
-from ..utils import record_to_json, friendlyhash, getLogger, friendly_auth_code
+from ..utils import record_to_dict, friendlyhash, getLogger, friendly_auth_code
 
 logger = getLogger('users.db')
 
@@ -62,7 +62,9 @@ class Db():
     async def get_user_by_id(self, user_id, existingconn=None):
         conn = existingconn or self.pool
         user = await conn.fetchrow('SELECT * FROM users WHERE id=$1', user_id)
-        return await record_to_json(user)
+        if not user:
+            raise Exception("User with id %s does not exist", user_id)
+        return await record_to_dict(user)
 
     async def getuser(self, id_hash, pass_auth_code=False, existingconn=None):
         "Get user in json format. Should never pass auth token, just for testing"
@@ -72,7 +74,7 @@ class Db():
             return None
         # Take care to make it a tuple to prevent making a set of letters
         exclude = set(('auth_code',)) if not pass_auth_code else set()
-        return await record_to_json(user, exclude=exclude)
+        return await record_to_dict(user, exclude=exclude)
 
     async def getuser_id(self, id_hash, existingconn=None):
         conn = existingconn or await self.pool.acquire()

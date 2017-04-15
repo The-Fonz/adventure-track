@@ -1,6 +1,5 @@
 import re
 import json
-import signal
 import asyncio
 
 from autobahn.wamp.types import RegisterOptions

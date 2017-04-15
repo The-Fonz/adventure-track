@@ -4,7 +4,7 @@ from os import environ
 import datetime
 
 import asyncpg
-from ..utils import record_to_json, records_to_json
+from ..utils import record_to_dict, records_to_dict
 
 logger = logging.getLogger('analytics.db')
 
@@ -31,6 +31,7 @@ CREATE TABLE analytics_events
 
     extra JSONB
 );
+CREATE INDEX analytics_events_event_type_index ON analytics_events (event_type);
 """
 
 

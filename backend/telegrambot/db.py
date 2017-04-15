@@ -5,7 +5,7 @@ from os import environ
 import asyncpg
 from sqlalchemy import MetaData, Table, Column, Integer, DateTime, create_engine
 
-from ..utils import record_to_json, getLogger
+from ..utils import record_to_dict, getLogger
 
 logger = getLogger('telegrambot.db')
 
@@ -42,7 +42,7 @@ class Db():
             await self.pool.release(conn)
         if not link:
             return None
-        return await record_to_json(link, exclude=('id', 'created'))
+        return await record_to_dict(link, exclude=('id', 'created'))
 
     async def insertlink(self, user_id, telegram_id, existingconn=None):
         conn = existingconn or await self.pool.acquire()
