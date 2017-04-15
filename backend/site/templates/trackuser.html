@@ -18,7 +18,20 @@ adventure-track
 
 <div>
     <div class="leftpane noselect">
-        <div id="map-view"></div>
+        <div id="map-view">
+            <section class="hero is-medium is-primary is-bold">
+              <div class="hero-body" style="padding-top:0;padding-bottom:0;height:100%;">
+                <div class="container" style="position:relative;top:50%;transform:translateY(-50%);">
+                  <h1 class="title">
+                    Map coming soon!
+                  </h1>
+                  <h2 class="subtitle">
+                    <i>We're working on it.</i>
+                  </h2>
+                </div>
+              </div>
+            </section>
+        </div>
         <div id="timeline"></div>
     </div>
     <div class="rightpane">
@@ -57,29 +70,31 @@ adventure-track
         {{/messagesLoadError}}
         {{#messages}}
         <div fade-in="{duration: 800}" class="card message">
-            <div class="card-image">
-                <figure class="image">
+            {{#if media.image || media.video}}
+            <div class="card-image" on-click="show">
+                <figure class="image mediathumb">
                     {{#if media.image}}
                     <div class="imgthumbwrapper">
-                        <img on-click="show" class="imgthumb" src="/media/{{media.image.thumb.path}}" />
+                        <img class="imgthumb" src="/media/{{media.image.thumb.path}}" />
                     </div>
                     {{/if}}
                     {{#if media.video}}
                     <div class="vidthumbwrapper">
-                        <img on-click="show" class="vidthumb" src="/media/{{media.video.thumb.path}}" />
+                        <img class="vidthumb" src="/media/{{media.video.thumb.path}}" />
                     </div>
                     {{/if}}
                 </figure>
             </div>
+            {{/if}}
             <div class="card-content">
                 <div class="media">
                     <div class="media-left">
                         <figure class="image is-48x48">
-                            <img src="http://bulma.io/images/placeholders/96x96.png" alt="Image">
+                            <img src="/static/profilepic-placeholder.png" alt="Image">
                         </figure>
                     </div>
                     <div class="media-content">
-                        <p class="title is-4">{{this.athlete.name}}</p>
+                        <p class="title is-4">{{users[this.user_id].first_name}} {{users[this.user_id].last_name}}</p>
                         <!--<p class="subtitle is-6">@johnsmith</p>-->
                     </div>
                 </div>

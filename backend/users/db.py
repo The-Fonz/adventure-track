@@ -46,7 +46,7 @@ class Db():
 
     async def check_auth(self, id_hash, auth_code, existingconn=None):
         "Returns *False* if auth_code wrong, *True* if right, and *None* if user not found"
-        conn = existingconn or await self.pool.acquire()
+        conn = existingconn or self.pool
         out = False
         user = await conn.fetchrow('SELECT id, auth_code FROM users WHERE id_hash=$1', id_hash)
         if user:
@@ -55,8 +55,6 @@ class Db():
                 out = True
         else:
             out = None
-        if not existingconn:
-            await self.pool.release(conn)
         return out
 
     async def get_user_by_id(self, user_id, existingconn=None):
@@ -66,7 +64,7 @@ class Db():
             raise Exception("User with id %s does not exist", user_id)
         return await record_to_dict(user)
 
-    async def getuser(self, id_hash, pass_auth_code=False, existingconn=None):
+    async def getuser(self, id_hash, pass_auth_code=False, exclude_sensitive=False, existingconn=None):
         "Get user in json format. Should never pass auth token, just for testing"
         conn = existingconn or self.pool
         user = await conn.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
@@ -74,25 +72,23 @@ class Db():
             return None
         # Take care to make it a tuple to prevent making a set of letters
         exclude = set(('auth_code',)) if not pass_auth_code else set()
+        if exclude_sensitive:
+            exclude = exclude.union(set(('email', 'telephone_mobile', 'id_hash', 'created', 'profilepic_original')))
         return await record_to_dict(user, exclude=exclude)
 
     async def getuser_id(self, id_hash, existingconn=None):
-        conn = existingconn or await self.pool.acquire()
+        conn = existingconn or self.pool
         user_id = await conn.fetchval('SELECT id FROM users WHERE id_hash=$1', id_hash)
-        if not existingconn:
-            await self.pool.release(conn)
         return user_id
 
     async def getuser_hash(self, id, existingconn=None):
-        conn = existingconn or await self.pool.acquire()
+        conn = existingconn or self.pool
         user_id_hash = await conn.fetchval('SELECT id_hash FROM users WHERE id=$1', id)
-        if not existingconn:
-            await self.pool.release(conn)
         return user_id_hash
 
     async def insertuser(self, userjson, id_hash=None, id_hash_collision_retry=False, existingconn=None):
         "Make new user based on json representation"
-        conn = existingconn or await self.pool.acquire()
+        conn = existingconn or self.pool
         u = dict()
         created = userjson.get('created', datetime.datetime.now())
         # URL-friendly and incremented-db-id-confuscating alphanumeric string identifier
@@ -128,8 +124,6 @@ class Db():
                 logger.warning("id_hash %s already exists, retry %s with another id", id_hash, i+1)
                 u['id_hash'] = await friendlyhash()
 
-        if not existingconn:
-            await self.pool.release(conn)
         return id
 
 

@@ -17,10 +17,11 @@ function widthMax(w) {
 
 let db = new Db();
 
-let map = new Map('map-view');
+// TODO: Implement map
+// let map = new Map('map-view');
 
 db.on('newTracks', (newTracks) => {
-    map.updateTracks(newTracks);
+    // map.updateTracks(newTracks);
 });
 
 let items = new vis.DataSet(db.messages);
@@ -32,14 +33,15 @@ let timeline = new vis.Timeline(
 db.on('newMsgs', (newMsgs) => {
     forEach(newMsgs, (m) => {
         items.add(m);
-        map.addMsgMarker(m);
+        // map.addMsgMarker(m);
     });
     timeline.fit();
 });
 
-db.on('newAthletes', (newAthletes) => {
-    forEach(newAthletes, (a) => {
-        map.addAthleteMarker(a);
+db.on('newUsers', (newUsers) => {
+    // Should only add if user is active athlete
+    forEach(newUsers, (a) => {
+        // map.addAthleteMarker(a);
     });
 });
 
@@ -67,6 +69,19 @@ connection.onopen = function (session, details) {
     function receiveMsgHandler(msgs) {
         db.msg_stream.receiveMsgs(msgs);
     }
+
+    function receiveUserHandler(usr) {
+        db.user_stream.receiveUsers([usr]);
+    }
+
+    session.call('at.public.users.get_user_by_hash', [uid]).then(
+        receiveUserHandler,
+        (err) => {
+            console.error("Error getting user by hash");
+            let errmsg = "There was an error loading the user. We've been notified!";
+            blog.set('messagesLoadError', errmsg);
+        }
+    );
 
     session.call('at.public.messages.fetchmsgs', [uid]).then(
         // Receives response
@@ -114,6 +129,7 @@ let blog = new Ractive({
     data: {
         // Make sure that messages have an id to keep same dom elements
         messages: db.messages,
+        users: db.users,
         // Keys are message id's
         likes: {},
         // Can be set externally
@@ -174,4 +190,4 @@ let overlay = new Ractive({
 });
 
 // Export for use in main-test
-export {db, map, blog, overlay, timeline};
+export {db, blog, overlay, timeline};

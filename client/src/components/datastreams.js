@@ -27,17 +27,17 @@ class Msg_stream extends EventEmitter {
 }
 
 
-class Athlete_stream extends EventEmitter {
+class User_stream extends EventEmitter {
     constructor() {
         super();
     }
-    receiveAthletes(athletes) {
-        if (isArray(athletes)) {
-            this.emit('newAthletes', athletes);
+    receiveUsers(users) {
+        if (isArray(users)) {
+            this.emit('newUsers', users);
         } else {
-            this.emit('newAthletes', [athletes]);
+            this.emit('newUsers', [users]);
         }
     }
 }
 
-export {Athlete_stream, Msg_stream, Track_stream};
+export {User_stream, Msg_stream, Track_stream};

@@ -46,7 +46,7 @@ AdventureTrack - Share your adventure
                                         {% endif %}
                                         {% if msg.media.video and msg.media.video.thumb %}
                                         <div class="vidthumbwrapper">
-                                            <img class="vidthumb" src="/media/{{msg.media.image.thumb.path}}" />
+                                            <img class="vidthumb" src="/media/{{msg.media.video.thumb.path}}" />
                                         </div>
                                         {% endif %}
                                     {% endif %}
@@ -58,7 +58,7 @@ AdventureTrack - Share your adventure
                                 <div class="media-left">
                                     <a href="{{user_page_url}}">
                                         <figure class="image is-48x48">
-                                            <img src="http://bulma.io/images/placeholders/96x96.png" alt="Image">
+                                            <img src="/static/profilepic-placeholder.png" alt="Image">
                                         </figure>
                                     </a>
                                 </div>

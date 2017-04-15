@@ -4,7 +4,7 @@ import moment from 'moment';
 import forEach from 'lodash/forEach';
 import findIndex from 'lodash/findIndex';
 import sortedIndexBy from 'lodash/sortedIndexBy';
-import {Athlete_stream, Msg_stream, Track_stream} from './datastreams.js';
+import {User_stream, Msg_stream, Track_stream} from './datastreams.js';
 
 
 /**
@@ -15,7 +15,7 @@ class Db extends EventEmitter {
     constructor() {
         super();
         // For initiating dummy streams
-        this.athlete_stream = new Athlete_stream();
+        this.user_stream = new User_stream();
         this.msg_stream = new Msg_stream();
         this.track_stream = new Track_stream();
         // Tracks by athlete id
@@ -24,7 +24,7 @@ class Db extends EventEmitter {
         this.tracks = {};
         // Athletes by id
         // {<athlete-id>: {id: 'ab123', name: 'Dude'}, ...}
-        this.athletes = {};
+        this.users = {};
         // *Inversely* chronologically ordered list of messages,
         // so newest first (easy rendering), sorted at all times
         // [{user_id: 'ab123', id: 'msgid1239214', text: 'Hi there!',
@@ -77,11 +77,11 @@ class Db extends EventEmitter {
             this.emit('newTracks', newTracks);
         });
 
-        this.athlete_stream.on('newAthletes', (newAthletes) => {
-            forEach(newAthletes, (a) => {
-                this.athletes[a.id] = a;
+        this.user_stream.on('newUsers', (newUsers) => {
+            forEach(newUsers, (u) => {
+                this.users[u.id] = u;
             });
-            this.emit('newAthletes', newAthletes);
+            this.emit('newUsers', newUsers);
         });
     }
 

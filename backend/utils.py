@@ -26,8 +26,8 @@ async def record_to_dict(record, exclude=set(), parse_media=True):
     "Transform record to json, exclude keys if needed"
     out = {}
     for k,v in record.items():
-        # Parse media
-        if k == 'media' and parse_media:
+        # Parse media if not None
+        if k == 'media' and parse_media and v:
             ml = json.loads(v)
             mo = dict()
             for m in ml:

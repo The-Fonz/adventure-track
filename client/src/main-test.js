@@ -35,7 +35,7 @@ function runTimeSim() {
 let athDumRun = fetch('/testdata/stjean/athletes.json')
     .then(resp => resp.json())
     .then((dummyAthletes) => {
-        db.athlete_stream.receiveAthletes(dummyAthletes);
+        db.user_stream.receiveAthletes(dummyAthletes);
     });
 
 // Have to run a http server in repo root for devdata!

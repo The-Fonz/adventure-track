@@ -23,6 +23,9 @@ class UsersComponent(BackendAppSession):
         async def get_user_by_hash(user_id_hash):
             return await db.getuser(user_id_hash)
 
+        async def get_user_by_hash_public(user_id_hash):
+            return await db.getuser(user_id_hash, exclude_sensitive=True)
+
         async def get_user_id_by_hash(user_id_hash):
             "Returns only numeric user id"
             return await db.getuser_id(user_id_hash)
@@ -36,6 +39,7 @@ class UsersComponent(BackendAppSession):
 
         self.register(get_user_by_id, 'at.users.get_user_by_id')
         self.register(get_user_by_hash, 'at.users.get_user_by_hash')
+        self.register(get_user_by_hash_public, 'at.public.users.get_user_by_hash')
         self.register(get_user_id_by_hash, 'at.users.get_user_id_by_hash')
         self.register(get_user_hash_by_id, 'at.users.get_user_hash_by_id')
         self.register(check_user_authcode, 'at.users.check_user_authcode')

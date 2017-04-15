@@ -101,23 +101,21 @@ body {
 }
 /* Make image transparent to indicate that it is not full-res */
 .imgthumb, .vidthumb {
-    opacity: .6;
-}
-/* Give :after element a non-standard positioned parent to relate to */
-.imgthumbwrapper,
-.vidthumbwrapper {
-    position: relative;
+    opacity: .7;
 }
 /* Center icon */
 .imgthumbwrapper:after,
 .vidthumbwrapper:after {
-    color: white;
-    opacity: 1;
+    color: rgba(255,255,255,.8);
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     cursor: pointer;
+}
+.imgthumbwrapper:hover:after,
+.vidthumbwrapper:hover:after {
+    color: rgba(255,255,255,1);
 }
 
 /* Overlay that shows video, images */
@@ -133,7 +131,7 @@ body {
 }
 
 /* Blog styling */
-.message .imgthumb, .message .vidthumb, .message .msglike {
+.message .mediathumb, .message .msglike {
     cursor: pointer;
 }
 #blog {
@@ -141,4 +139,22 @@ body {
 }
 .msglike.liked {
     color: red;
+}
+/* Image container should be 16x9 */
+.message .mediathumb {
+    /* This trick makes use of the fact that padding is relative to width */
+    padding: 0 0 56.25% 0;
+    height: 0;
+    background: darkgrey;
+}
+/* Make image stretch to height of container. CSS is insane. */
+.message img.vidthumb, .message img.imgthumb {
+    position: absolute;
+    width: auto;
+    left: 50%;
+    height: 999px;
+    max-height: 100%;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-50%);
 }
