@@ -56,3 +56,5 @@
     - hashids
     - python-telegram-bot
     - plotly
+    # Sentry client
+    - raven

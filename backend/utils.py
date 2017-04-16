@@ -11,11 +11,7 @@ from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
 
 def getLogger(name):
-    "Centralized logging setup"
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(levelname)7s: %(asctime)s %(name)s:%(funcName)s:%(lineno)s %(message)s'
-    )
+    "Logging setup is done in __init__"
     return logging.getLogger(name)
 
 

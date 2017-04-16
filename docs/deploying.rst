@@ -2,6 +2,10 @@ Deploying
 =========
 
 
+Sentry logging
+==============
+[Sentry](sentry.io) can be used to log errors in production. For the backend services to use Sentry, set the *AT_SENTRY_DSN* envvar. (E.g. in */etc/environment*, which gets loaded by *systemd* on *supervisor* startup.) For the frontend to use Sentry, set the *AT_SENTRY_DSN_PUBLIC* in the environment where the javascript gets bundled.
+
 Systemd daemon processes
 ========================
 

@@ -6,7 +6,7 @@
 AdventureTrack docs
 ===================
 
-Hi there, these are the AdventureTrack docs. It's built up out of a number of `Nameko <http://nameko.readthedocs.io>`_ microservices, with `Flask <http://flask.pocoo.org/>`_ as http endpoint, including authentication and admin interface. `Flask-SocketIO <http://flask-socketio.readthedocs.io>`_ is used to provide realtime updates.
+Hi there, these are the AdventureTrack docs. It's built up out of a number of microservices running an *asyncio* event loop, communicating with other services using the [Autobahn](autobahn.ws) [WAMP](wamp.ws) framework. [Crossbar](crossbar.io) is used as a WAMP router for both backend and frontend.
 
 
 .. toctree::
@@ -14,5 +14,4 @@ Hi there, these are the AdventureTrack docs. It's built up out of a number of `N
    :caption: Contents:
 
    deploying
-   webapp
    messages

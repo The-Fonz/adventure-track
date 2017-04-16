@@ -2,10 +2,19 @@ import autobahn from 'autobahn';
 import Ractive from 'ractive';
 import forEach from 'lodash/forEach';
 import vis from 'vis';
+import fade from 'ractive-transitions-fade';
+import Raven from 'raven-js';
+
+let sentry_dsn_public = process.env.AT_SENTRY_DSN_PUBLIC;
+
+if (sentry_dsn_public) {
+    Raven.config(sentry_dsn_public).install();
+    console.info("Initialized Sentry");
+}
+
 import {Db} from './components/db.js';
 import {Map} from './components/map.js';
 
-import fade from 'ractive-transitions-fade';
 
 function widthMax(w) {
     return window.matchMedia(`(max-device-width: ${w}px)`).matches;
