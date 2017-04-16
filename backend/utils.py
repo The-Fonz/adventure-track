@@ -1,11 +1,15 @@
 import os
+import re
 import uuid
 import json
 import signal
 import asyncio
+import asyncpg
 import logging
 import datetime
+import unittest
 
+import dateutil.parser
 from hashids import Hashids
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 
@@ -120,3 +124,34 @@ class BackendAppSession(ApplicationSession):
 
         l.close()
         logger.info("Loop closed")
+
+
+def db_test_case_factory(db_cls):
+    """
+    Use this to create TestCase class with proper db.
+    Subclass this like `class SomeTestCase(db_test_case_factory(db)): ...`
+    """
+    class DbTestCase(unittest.TestCase):
+        "Use self.lru for run_until_complete, self.db for db access"
+        def setUp(self):
+            self.l = asyncio.get_event_loop()
+            # Easy access
+            self.lru = self.l.run_until_complete
+            self.conn = self.lru(asyncpg.connect(dsn=os.environ["DB_URI_ATSITE"]))
+            self.t = self.conn.transaction()
+            self.lru(self.t.start())
+            self.db = self.lru(db_cls.create(existingconn=self.conn))
+            def raisesWrapper(coro_func):
+                "Closure to make it possible to pass coro to assertRaises"
+                def f(*args, **kwargs):
+                    coro = coro_func(*args, **kwargs)
+                    return self.lru(coro)
+                return f
+            self.awrap = raisesWrapper
+
+        def tearDown(self):
+            # Roll back transaction, close connection
+            self.lru(self.t.rollback())
+            self.lru(self.conn.close())
+
+    return DbTestCase
