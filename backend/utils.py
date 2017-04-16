@@ -18,11 +18,30 @@ def getLogger(name):
     "Logging setup is done in __init__"
     return logging.getLogger(name)
 
-
 logger = getLogger('utils')
 
+def convert_to_datetime(s):
+    """
+    Converts an ISO string to datetime, but not if it's already a datetime obj.
+    :param s: String or datetime.datetime
+    :return: datetime.datetime
+    """
+    return s if isinstance(s, datetime.datetime) else dateutil.parser.parse(s)
 
-async def record_to_dict(record, exclude=set(), parse_media=True):
+
+def ptz_wkt_to_dict(ptz_wkt):
+    "Parses well-known text representation of POINTZ to custom dict"
+    m = re.search("\(([\d\.]+)\s*([\d\.]+)\s*([\d\.]+)\)", ptz_wkt)
+    if not m:
+        raise Exception("Format not recognized: %s", ptz_wkt)
+    return {
+        "longitude": float(m.group(1)),
+        "latitude": float(m.group(2)),
+        "height_m_msl": float(m.group(3))
+    }
+
+
+async def record_to_dict(record, exclude=set(), parse_media=True, parse_ptz=True):
     "Transform record to json, exclude keys if needed"
     out = {}
     for k,v in record.items():
@@ -41,6 +60,9 @@ async def record_to_dict(record, exclude=set(), parse_media=True):
                     # Exclude sensitive keys in media dict as well
                     mo[typ][conf_name] = {k:v for k,v in m.items() if k not in exclude}
             out[k] = mo
+        elif parse_ptz and k == 'ptz':
+            # Convert WKT to custom dict
+            out[k] = ptz_wkt_to_dict(v)
         elif k not in exclude:
             # Parse json
             if type(v) == str and v.strip().startswith('{'):
