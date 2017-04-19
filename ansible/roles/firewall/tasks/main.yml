@@ -1,0 +1,26 @@
+---
+- name: ufw deny all incoming
+  ufw:
+    direction: incoming
+    policy: deny
+
+- name: ufw allow all outgoing
+  ufw:
+    direction: outgoing
+    policy: allow
+
+- name: ufw allow ssh and nginx
+  ufw: name={{item}} rule=allow
+  with_items:
+    - OpenSSH
+    - Nginx Full
+
+- name: ufw allow skylines udp protocol, enable ufw
+  ufw:
+    rule: allow
+    port: 5597
+    state: enabled
+
+- name: install fail2ban
+  # SSH jail will be enabled by default
+  apt: pkg=fail2ban state=installed

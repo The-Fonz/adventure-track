@@ -1,16 +1,22 @@
 ---
-- hosts: all
-  remote_user: vagrant
+- hosts: adventure-track
+  remote_user: root
   become: true
   become_method: sudo
   vars:
     # User specifically created for running this app
     USER: atuser
-    # Insecure password is not an issue for dev box
-    PASSWORD: adventure01
-    DEV: true
+    PASSWORD: "{{lookup('password', 'passwdlookup/atuser-password.txt')}}"
+    DEV: false
     USER_ROOT: /home/{{USER}}
     REPO_ROOT: "{{USER_ROOT}}/adventure-track"
+
+  pre_tasks:
+    - name: clone git repo
+      git:
+        repo: 'https://github.com/the-fonz/adventure-track'
+        dest: "{{REPO_ROOT}}"
+        update: yes
 
   roles:
     - add_user
