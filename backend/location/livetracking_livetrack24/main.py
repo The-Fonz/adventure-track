@@ -16,9 +16,10 @@ async def site_factory(wampsess):
 
     async def client(request):
         "Should return 0 if invalid, otherwise user id integer"
-        user_id_hash = request.match_info.get('user')
-        user_auth_code = request.match_info.get('pass')
+        user_id_hash = request.query.get('user')
+        user_auth_code = request.query.get('pass')
         if not user_id_hash or not user_auth_code:
+            logger.info("No user or pass provided...")
             # Livetrack24 returns status 200 on basically any error
             return web.Response(status=200, text='0')
         try:
@@ -27,14 +28,16 @@ async def site_factory(wampsess):
             logger.exception("Could not reach user service!")
             return web.HTTPInternalServerError(reason="Internal communication error")
         if user_id:
+            logger.info("Correct credentials for user id %s", user_id)
             # Send back actual user ID
             return web.Response(text=str(user_id), status=200)
         else:
+            logger.info("Incorrect credentials or non-existing user, user_id: %s", user_id)
             return web.Response(text='0', status=200)
 
     async def track(request):
         "Track point as per the spec at http://www.livetrack24.com/docs/wiki/LiveTracking%20API"
-        g = lambda n: request.match_info.get(n)
+        g = lambda n: request.query.get(n)
         leolive = g('leolive')
         sessionid = g('sid')
         if not sessionid:

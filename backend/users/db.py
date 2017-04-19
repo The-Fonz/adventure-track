@@ -52,7 +52,7 @@ class Db():
         if user:
             # Strip out any whitespace
             if auth_code.strip() == user['auth_code'].strip():
-                out = user['user_id']
+                out = user['id']
         else:
             out = None
         return out

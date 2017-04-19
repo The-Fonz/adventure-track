@@ -74,7 +74,7 @@
     - python-dateutil
     - hashids
     - python-telegram-bot
-    - plotly
+    - pygal
     - jsonschema
     # Sentry client
     - raven
