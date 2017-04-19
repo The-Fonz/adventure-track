@@ -22,6 +22,6 @@ if sentry_dsn:
     from raven.conf import setup_logging
 
     client = Client(sentry_dsn)
-    handler = SentryHandler(client)
+    handler = SentryHandler(client, level='WARNING')
     setup_logging(handler)
     l.info("Set up Sentry client")
