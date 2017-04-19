@@ -37,7 +37,7 @@ async def site_factory(wampsess, middlewares):
             usrs = await asyncio.gather(*[wampsess.call('at.users.get_user_by_id', msg['user_id']) for msg in msgs])
             for msg, usr in zip(msgs, usrs):
                 msg['user'] = usr
-            msg['timestamp'] = dateutil.parser.parse(msg['timestamp'])
+                msg['timestamp'] = dateutil.parser.parse(msg['timestamp'])
             # logger.info(msgs)
         except ApplicationError:
             msgsLoadError = "There was an error while retrieving messages. We've been notified!"
