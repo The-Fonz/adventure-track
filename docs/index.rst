@@ -14,4 +14,5 @@ Hi there, these are the AdventureTrack docs. It's built up out of a number of mi
    :caption: Contents:
 
    deploying
+   managing
    messages
