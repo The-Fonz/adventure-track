@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import uuid
 import json
 import signal
@@ -118,6 +119,11 @@ class BackendAppSession(ApplicationSession):
         "Override this class when implementing custom cleanup logic"
         logger.warning("transport disconnected, stopping event loop...")
         # TODO: Clean disconnect using .leave (gave some txaio error though)
+        # Handle cleanup methods here if possible
+        if getattr(self, 'cleanup', None):
+            logger.info("Running cleanup method...")
+            l = asyncio.get_event_loop()
+            l.run_until_complete(self.cleanup(l))
         asyncio.get_event_loop().stop()
 
     @classmethod
@@ -146,7 +152,8 @@ class BackendAppSession(ApplicationSession):
             l.run_until_complete(protocol._session.cleanup(l))
 
         l.close()
-        logger.info("Loop closed")
+        logger.info("Loop closed, hard exit...")
+        sys.exit()
 
 
 def db_test_case_factory(db_cls):

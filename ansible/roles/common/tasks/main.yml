@@ -33,6 +33,8 @@
   with_items:
     # Latest Python
     - python3.6
+    # Nice for debugging etc.
+    - ipython
     # Needed for setting up virtualenv and building libraries
     - python3.6-dev
     - python3-pip
