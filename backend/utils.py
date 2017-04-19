@@ -131,7 +131,8 @@ class BackendAppSession(ApplicationSession):
 
         runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
 
-        protocol = runner.run(cls, start_loop=False)
+        # .run() returns a coro that creates connection
+        protocol = l.run_until_complete(runner.run(cls, start_loop=False))
 
         l.add_signal_handler(signal.SIGINT, l.stop)
         l.add_signal_handler(signal.SIGTERM, l.stop)
