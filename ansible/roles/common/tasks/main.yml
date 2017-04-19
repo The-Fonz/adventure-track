@@ -3,6 +3,26 @@
     dest: /etc/environment
     line: "LC_ALL=C.UTF-8"
 
+- name: set media root for services and tasks
+  # Subfolder convention is: /video /audio /image
+  lineinfile:
+    dest: /etc/environment
+    line: 'AT_MEDIA_ROOT="{{USER_ROOT}}/media"'
+
+- name: make media and log dirs
+  file:
+    path: "{{item}}"
+    owner: "{{USER}}"
+    group: "{{USER}}"
+    state: directory
+    # Default mode is 775, but just to make sure
+    mode: 0775
+  with_items:
+    - "{{USER_ROOT}}/media/video"
+    - "{{USER_ROOT}}/media/image"
+    - "{{USER_ROOT}}/media/audio"
+    - "{{USER_ROOT}}/log"
+
 - name: add python 3.6 repo
   apt_repository:
     repo: ppa:jonathonf/python-3.6
@@ -18,7 +38,6 @@
     - python3-pip
     - virtualenv
     - gcc
-    - syslog-ng
     # Monitor system resources
     - htop
     # Process watcher
@@ -27,9 +46,9 @@
     - nginx
     # Postgres and PostGIS geospatial extention
     - postgresql
-    - libpq-dev
-    - postgis
+    - postgresql-9.5-postgis-2.2
     - "*postgis-scripts"
+    - libpq-dev
     # Used by ansible postgres module
     - python-psycopg2
     # Convert video, audio

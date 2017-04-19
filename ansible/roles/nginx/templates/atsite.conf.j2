@@ -6,6 +6,10 @@ upstream atanalytics {
     server 127.0.0.1:5001;
 }
 
+upstream livetracking_livetrack24 {
+    server 127.0.0.1:5002;
+}
+
 server {
     # Use leading dot to match subdomains as well
     # Add server catch-all if vm
@@ -40,6 +44,13 @@ server {
     location ~ ^/analytics(?:/(.*))?$ {
         include proxy_params;
         proxy_pass http://atanalytics/$1;
+    }
+
+    # Detect Livetrack24 livetracking format
+    location ~ ^.*/(client.php|track.php) {
+        include proxy_params;
+        # No trailing slash to pass the entire URI
+        proxy_pass http://livetracking_livetrack24;
     }
 
     # Crossbar router

@@ -45,14 +45,14 @@ class Db():
         return db
 
     async def check_auth(self, id_hash, auth_code, existingconn=None):
-        "Returns *False* if auth_code wrong, *True* if right, and *None* if user not found"
+        "Returns *False* if auth_code wrong, *user_id if right, and *None* if user not found"
         conn = existingconn or self.pool
         out = False
         user = await conn.fetchrow('SELECT id, auth_code FROM users WHERE id_hash=$1', id_hash)
         if user:
             # Strip out any whitespace
             if auth_code.strip() == user['auth_code'].strip():
-                out = True
+                out = user['user_id']
         else:
             out = None
         return out

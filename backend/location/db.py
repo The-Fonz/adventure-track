@@ -23,7 +23,9 @@ CREATE TABLE gps_point
   -- PostGIS geography type is lat/lon on the WGS84 spheroid
   -- It has less functionality and is slower in computations than geometry,
   -- but at least it's global so we don't have to mess with local projections
-  ptz                     geography(POINTZ,4326)
+  ptz                     geography(POINTZ,4326),
+  sog                     FLOAT,
+  cog                     FLOAT
 );
 -- Fast joins
 CREATE INDEX gps_point_user_id_index ON gps_point(user_id);
@@ -60,16 +62,34 @@ class Db():
         pt_wkt = "SRID=4326;POINTZ({longitude:.6f} {latitude:.6f} {height_m_msl:.2f})".format(**v('ptz'))
 
         id = await self.conn.fetchval('''
-        INSERT INTO gps_point (id, user_id, timestamp, received, ptz)
-        VALUES (DEFAULT, $1, $2, $3, ST_GeogFromText($4))
-        RETURNING id;''', v('user_id'), v('timestamp'), v('received'), pt_wkt)
+        INSERT INTO gps_point (id, user_id, timestamp, received, ptz, sog, cog)
+        VALUES (DEFAULT, $1, $2, $3, ST_GeogFromText($4), $5, $6)
+        RETURNING id;''', v('user_id'), v('timestamp'), v('received'), pt_wkt,
+                                      v('speed_over_ground_kmh'), v('course_over_ground_deg'))
         return id
 
-    async def get_gps_points(self, user_id, fro=None, to=None):
+    async def get_gps_points(self, user_id, return_vanilla=False, start=datetime.datetime.min, end=datetime.datetime.max):
+        """
+        Get GPS points of specific user.
+        :param user_id: ID of user to query points for
+        :param return_vanilla: Return in schema format, if False return frontend format, default False
+        :param start:
+        :param end:
+        :return: 
+        """
         recs = await self.conn.fetch('''
-        SELECT user_id, timestamp, received, ST_AsText(ptz) ptz FROM gps_point WHERE user_id=$1;
-        ''', user_id)
-        return await records_to_dict(recs)
+        SELECT user_id, timestamp, received, ST_AsText(ptz) ptz
+        FROM gps_point
+        WHERE user_id=$1 AND gps_point.timestamp >= $2 AND gps_point.timestamp <= $3
+        ORDER BY gps_point.timestamp ASC;
+        ''', user_id, start, end)
+        # Same format as incoming
+        if return_vanilla:
+            return await records_to_dict(recs)
+        # Convert to custom, efficient db format
+        parsept = lambda p: [float(c) for c in p.split('(')[-1].split(')')[0].split()]
+        return {"coordinates": [parsept(r['ptz']) for r in recs],
+                "timestamps": [r['timestamp'].isoformat() for r in recs]}
 
 
 class RollbackException(Exception): pass
@@ -87,9 +107,10 @@ class SomeTestCase(db_test_case_factory(Db)):
                                invalidpt)
 
     def test_validpt(self):
+        t = datetime.datetime.now().isoformat()
         validpt = {
             "user_id": -10,
-            "timestamp": datetime.datetime.now().isoformat(),
+            "timestamp": t,
             "ptz": {
                 "longitude": 5,
                 "latitude": 6,
@@ -98,10 +119,12 @@ class SomeTestCase(db_test_case_factory(Db)):
         }
         id = self.lru(self.db.insert_gps_point(validpt))
         self.assertIsInstance(id, int)
-        validpts_retrieved = self.lru(self.db.get_gps_points(-10))
+        validpts_retrieved = self.lru(self.db.get_gps_points(-10, return_vanilla=True))
         # This key added when inserting
         del validpts_retrieved[0]['received']
         self.assertEqual(validpt, validpts_retrieved[0])
+        validpts_retrieved_f = self.lru(self.db.get_gps_points(-10))
+        self.assertEqual(validpts_retrieved_f, {"coordinates": [[5,6,900]], "timestamps": [t]})
 
 
 

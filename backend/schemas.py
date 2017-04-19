@@ -34,7 +34,14 @@ JSON_SCHEMA_LOCATION_GPS_POINT = {
             },
             "required": ["latitude", "longitude", "height_m_msl"]
         },
-
+        "speed_over_ground_kmh": {
+            "description": "Speed over ground in km/h",
+            "type": "number"
+        },
+        "course_over_ground_deg": {
+            "description": "Course over ground in degrees 0-360",
+            "type": "number"
+        }
     },
     "required": ["user_id", "ptz", "received"]
 }

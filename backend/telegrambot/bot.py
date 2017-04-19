@@ -50,12 +50,9 @@ def main(wampsess, loop):
                 auth = wampsess.call('at.users.check_user_authcode', user_id_hash, user_auth_code)
                 # Must specify timeout!
                 auth = runcoro(asyncio.wait_for(auth, 2))
-                auth = auth.result()
-                if auth == True:
-                    # Retrieve true user id
-                    fut = wampsess.call('at.users.get_user_id_by_hash', user_id_hash)
-                    fut = runcoro(asyncio.wait_for(fut, 2))
-                    user_id = fut.result()
+                user_id = auth.result()
+                # Is falsy if not successful
+                if user_id:
                     # Add link
                     runcoro(wampsess.db.insertlink(user_id=user_id, telegram_id=telegram_id))
                     bot.sendMessage(chat_id=cid, text=MSGS['authcode_successful'])
