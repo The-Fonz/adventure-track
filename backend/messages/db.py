@@ -15,7 +15,7 @@ logger = logging.getLogger('messages.db')
 SQL_CREATE_TABLE_MESSAGE = '''
 CREATE TABLE message
 (
-  id                  INTEGER PRIMARY KEY NOT NULL,
+  id                  SERIAL PRIMARY KEY,
   user_id             INTEGER NOT NULL,
   -- Time that message was received by server
   received            TIMESTAMP NOT NULL,
