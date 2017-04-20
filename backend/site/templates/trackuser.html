@@ -86,6 +86,13 @@ adventure-track
                 </figure>
             </div>
             {{/if}}
+            {{#if media.audio}}
+            <div class="card-audio">
+                <audio src="/media/{{media.audio.std.path}}" >
+                    Your browser does not support the <code>audio</code> element.
+                </audio>
+            </div>
+            {{/if}}
             <div class="card-content">
                 <div class="media">
                     <div class="media-left">
