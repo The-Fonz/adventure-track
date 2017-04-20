@@ -130,9 +130,9 @@ def main(wampsess, loop):
                 avmsg = t.audio
                 typ = 'audio'
             file_id = avmsg.file_id
-            reply = "Received {} message of {}s mimetype {} filesize {:.2f}MB".format(typ, vid.duration,
-                                                                                                vid.mime_type,
-                                                                                                vid.file_size / 1E6)
+            reply = "Received {} message of {}s mimetype {} filesize {:.2f}MB".format(typ, avmsg.duration,
+                                                                                                avmsg.mime_type,
+                                                                                                avmsg.file_size / 1E6)
             bot.sendMessage(chat_id=cid, text=reply)
             audfile = bot.get_file(file_id)
             # Get original extension and remove leading dot (if any)
@@ -144,6 +144,7 @@ def main(wampsess, loop):
             msg['audio_original'] = os.path.relpath(audpath, start=mediapath)
             logger.debug("Saved audio as {}".format(audpath))
         if t.location:
+            # TODO: Send location to location service
             logger.debug(t.location)
             bot.sendMessage(chat_id=cid, text="Location not supported yet")
         try:
