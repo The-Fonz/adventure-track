@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 
 from autobahn.wamp.exception import ApplicationError
 from aiohttp import web
@@ -41,27 +42,31 @@ async def site_factory(wampsess):
         leolive = g('leolive')
         sessionid = g('sid')
         if not sessionid:
+            logger.info("No session ID")
             return web.Response(status=200, text="NOK : No session ID")
         # Ignore start/end track packets
-        if leolive != 4:
+        # Compare against string, not int!
+        if leolive != '4':
+            logger.info("Leolive is not 4 but %s", leolive)
             return web.Response(status=200)
 
         trackpt = {
+            "source": 'mobile',
             # Rightmost 3 bits are user ID, see spec
-            "user_id": sessionid & 0x00ffffff,
+            "user_id": int(sessionid) & 0x00ffffff,
             # Unix GPS timestamp in GMT
-            "timestamp": g('tm'),
+            "timestamp": datetime.datetime.utcfromtimestamp(g('tm')).isoformat(),
             "ptz": {
                 # Lat/lon in decimal notation
-                "longitude": g('lon'),
-                "latitude": g('lat'),
+                "longitude": float(g('lon')),
+                "latitude": float(g('lat')),
                 # Altitude in meters above MSL (not geoid), no decimals
-                "height_m_msl": g('alt')
+                "height_m_msl": float(g('alt'))
             },
             # Speed over ground in km/h, no decimals
-            "speed_over_ground_kmh": g('sog'),
+            "speed_over_ground_kmh": float(g('sog')),
             # Course over ground in degrees 0-360, no decimals
-            "course_over_ground_deg": g('cog')
+            "course_over_ground_deg": float(g('cog'))
         }
 
         await wampsess.call('at.location.insert_gps_point', trackpt)

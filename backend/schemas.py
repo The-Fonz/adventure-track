@@ -41,6 +41,11 @@ JSON_SCHEMA_LOCATION_GPS_POINT = {
         "course_over_ground_deg": {
             "description": "Course over ground in degrees 0-360",
             "type": "number"
+        },
+        "source": {
+            "description": "Data source, e.g. mobile, spot",
+            "type": "string",
+            "enum": ['mobile', 'spot', 'telegram']
         }
     },
     "required": ["user_id", "ptz", "received"]

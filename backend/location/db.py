@@ -12,10 +12,14 @@ from ..utils import db_test_case_factory, records_to_dict, convert_to_datetime
 
 
 SQL_CREATE_TABLE_GPS_POINT = '''
+-- Enum for low space use
+CREATE TYPE gps_point_source AS ENUM ('mobile', 'spot', 'telegram');
+
 CREATE TABLE gps_point
 (
   id                      SERIAL PRIMARY KEY,
   user_id                 INTEGER,
+  source                  gps_point_source,
   -- Actual GPS timestamp
   timestamp               TIMESTAMP,
   -- When it was received by server
@@ -62,10 +66,10 @@ class Db():
         pt_wkt = "SRID=4326;POINTZ({longitude:.6f} {latitude:.6f} {height_m_msl:.2f})".format(**v('ptz'))
 
         id = await self.conn.fetchval('''
-        INSERT INTO gps_point (id, user_id, timestamp, received, ptz, sog, cog)
+        INSERT INTO gps_point (id, user_id, timestamp, received, ptz, sog, cog, source)
         VALUES (DEFAULT, $1, $2, $3, ST_GeogFromText($4), $5, $6)
         RETURNING id;''', v('user_id'), v('timestamp'), v('received'), pt_wkt,
-                                      v('speed_over_ground_kmh'), v('course_over_ground_deg'))
+                                      v('speed_over_ground_kmh'), v('course_over_ground_deg'), v('source'))
         return id
 
     async def get_gps_points(self, user_id, return_vanilla=False, start=datetime.datetime.min, end=datetime.datetime.max):
