@@ -55,7 +55,7 @@ async def site_factory(wampsess):
             # Rightmost 3 bits are user ID, see spec
             "user_id": int(sessionid) & 0x00ffffff,
             # Unix GPS timestamp in GMT
-            "timestamp": datetime.datetime.utcfromtimestamp(g('tm')).isoformat(),
+            "timestamp": datetime.datetime.utcfromtimestamp(int(g('tm'))).isoformat(),
             "ptz": {
                 # Lat/lon in decimal notation
                 "longitude": float(g('lon')),
@@ -70,6 +70,7 @@ async def site_factory(wampsess):
         }
 
         await wampsess.call('at.location.insert_gps_point', trackpt)
+        return web.Response(status=200)
 
     app = web.Application()
 

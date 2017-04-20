@@ -67,7 +67,7 @@ class Db():
 
         id = await self.conn.fetchval('''
         INSERT INTO gps_point (id, user_id, timestamp, received, ptz, sog, cog, source)
-        VALUES (DEFAULT, $1, $2, $3, ST_GeogFromText($4), $5, $6)
+        VALUES (DEFAULT, $1, $2, $3, ST_GeogFromText($4), $5, $6, $7)
         RETURNING id;''', v('user_id'), v('timestamp'), v('received'), pt_wkt,
                                       v('speed_over_ground_kmh'), v('course_over_ground_deg'), v('source'))
         return id
