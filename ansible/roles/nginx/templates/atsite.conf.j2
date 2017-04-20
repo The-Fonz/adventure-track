@@ -94,4 +94,7 @@ server {
     # which is faster. With nginx/linux it's either non-blocking loading
     # from disk with thread pools or blocking loading from memory/disk.
     # (nginx cannot check if a file is cached in memory due to kernel)
+
+    # Certbot static dir serve
+    include snippets/*.certbot.conf;
 }

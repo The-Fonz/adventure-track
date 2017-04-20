@@ -6,3 +6,6 @@ dependencies:
        template: atsite.conf.j2
        # Additional values can be defined here, accessible using {{item.value.foo_bar}}
        #server_name: foo_bar
+   nginx_snippets:
+     wellknown.certbot:
+      - location /.well-known { root /var/www/certbot; }
