@@ -19,4 +19,6 @@ image_resolutions = [
 ]
 
 # Not implemented yet
-audio_resolutions = []
+audio_resolutions = [
+    {'name': 'std', 'max-bitrate': 128, 'ext': 'm4a'}
+]

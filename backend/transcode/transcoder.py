@@ -1,4 +1,5 @@
 import os
+import re
 import asyncio
 import tempfile
 import os.path as osp
@@ -143,6 +144,7 @@ class VidTranscoder(Transcoder):
         # TODO: Find dest file width, height
         return {'timestamp': None, 'duration': None, 'width': None, 'height': None, 'log': stdout}
 
+
 class ImageTranscoder(Transcoder):
     def init(self):
         # Just one thread, make concurrent by instantiating multiple ImageTranscoder classes
@@ -170,5 +172,24 @@ class ImageTranscoder(Transcoder):
 
 
 class AudioTranscoder(Transcoder):
-    async def transcode(self, p):
-        raise Warning("Audio transcoding not implemented")
+    async def transcode(self, src, dest, conf):
+        "Keep same bitrate preferably"
+        info = await self.run_subprocess(['ffmpeg', '-i', src])
+        bitrate = 1000
+        try:
+            res = re.search('bitrate:\s*([\d\.]+)\s*kb\/s', info)
+            bitrate = int(res.group(1))
+        except (AttributeError, ValueError) as e:
+            logger.warning("Could not find audio bitrate in ffmpeg info string: %s\nError: %s", info, str(e))
+        bitrate = min(bitrate, conf.get('max-bitrate', 128))
+        # Encode as AAC, add some flags to move metadata to start of file for fast playback start
+        log = await self.run_subprocess(
+            ['ffmpeg', '-i', src, '-c:a', 'aac', '-movflags', '+faststart', '-b:a', '{:.0f}k'.format(bitrate), dest])
+        duration = None
+        try:
+            res = re.search('Duration:\s*(\d+):(\d+):([\d\.]+)', log)
+            # The simplicity, I love it!
+            duration = float(res.group(1))*3600 + float(res.group(2))*60 + float(res.group(3))
+        except (AttributeError, ValueError):
+            logger.warning("Could not find duration of audio file in log %s", log)
+        return {'timestamp': None, 'duration': duration, 'log': log}

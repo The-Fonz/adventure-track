@@ -123,9 +123,26 @@ def main(wampsess, loop):
             msg['image_original'] = os.path.relpath(imgpath, start=mediapath)
             logger.debug("Saved img as {}".format(imgpath))
         if t.audio or t.voice:
-            logger.debug(t.audio)
-            logger.debug(t.voice)
-            bot.sendMessage(chat_id=cid, text="Audio and voice not supported yet")
+            if t.voice:
+                avmsg = t.voice
+                typ = 'voice'
+            elif t.audio:
+                avmsg = t.audio
+                typ = 'audio'
+            file_id = avmsg.file_id
+            reply = "Received {} message of {}s mimetype {} filesize {:.2f}MB".format(typ, vid.duration,
+                                                                                                vid.mime_type,
+                                                                                                vid.file_size / 1E6)
+            bot.sendMessage(chat_id=cid, text=reply)
+            audfile = bot.get_file(file_id)
+            # Get original extension and remove leading dot (if any)
+            ext = os.path.splitext(audfile.file_path)[1].replace('.', '')
+            fn = "{}_{}.{}".format(msg['timestamp'], uuid.uuid4(), ext)
+            audpath = os.path.join(aud_root, fn)
+            audfile.download(custom_path=audpath)
+            # Save path relative to media root, to avoid issues when moving stuff around
+            msg['audio_original'] = os.path.relpath(audpath, start=mediapath)
+            logger.debug("Saved audio as {}".format(audpath))
         if t.location:
             logger.debug(t.location)
             bot.sendMessage(chat_id=cid, text="Location not supported yet")
