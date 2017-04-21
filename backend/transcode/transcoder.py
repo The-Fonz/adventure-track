@@ -84,7 +84,7 @@ class Transcoder:
     async def transcode(self, *args, **kwargs):
         raise Warning("Method not implemented")
 
-    async def run_subprocess(self, cmd_list):
+    async def run_subprocess(self, cmd_list, ignore_returncode=False):
         "Run a subprocess as coroutine"
         logger.info("Running command > {}".format(' '.join(cmd_list)))
         # TODO: Use asyncio.wait_for to specify a timeout
@@ -100,7 +100,7 @@ class Transcoder:
         # Process is over now
         self.proc = None
         stdout, stderr = await proc.communicate()
-        if proc.returncode:
+        if proc.returncode and not ignore_returncode:
             raise Warning("Return code {} is nonzero, stdout={} stderr={}".format(proc.returncode, stdout, stderr))
         # stdout is bytes, conver to string for json serialization
         return stderr.decode('utf-8')
@@ -174,7 +174,8 @@ class ImageTranscoder(Transcoder):
 class AudioTranscoder(Transcoder):
     async def transcode(self, src, dest, conf):
         "Keep same bitrate preferably"
-        info = await self.run_subprocess(['ffmpeg', '-i', src])
+        # Ignore returncode as ffmpeg will show info but exit saying it needs output file
+        info = await self.run_subprocess(['ffmpeg', '-i', src], ignore_returncode=True)
         bitrate = 1000
         try:
             res = re.search('bitrate:\s*([\d\.]+)\s*kb\/s', info)
