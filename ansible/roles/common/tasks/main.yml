@@ -23,23 +23,14 @@
     - "{{USER_ROOT}}/media/audio"
     - "{{USER_ROOT}}/log"
 
-- name: add python 3.6 repo
-  apt_repository:
-    repo: ppa:jonathonf/python-3.6
-
 - name: install packages
   tags: ["apt"]
   apt: name={{item}} state=present update_cache=yes
   with_items:
-    # Latest Python
-    - python3.6
-    # Nice for debugging etc.
-    - ipython
     # Needed for setting up virtualenv and building libraries
     - python3.6-dev
     - python3-pip
     - virtualenv
-    - gcc
     # Monitor system resources
     - htop
     # Process watcher
@@ -47,14 +38,23 @@
     # Reverse proxy and more
     - nginx
     # Postgres and PostGIS geospatial extention
-    - postgresql
-    - postgresql-9.5-postgis-2.2
-    - "*postgis-scripts"
+    - postgresql-9.6
+    - postgresql-contrib-9.6
+    - postgresql-9.6-postgis-2.3
+    - postgresql-9.6-postgis-2.3-scripts
     - libpq-dev
     # Used by ansible postgres module
     - python-psycopg2
     # Convert video, audio
     - ffmpeg
+    # Needed for compiling crossbar
+    - build-essential
+    - libssl-dev
+    - libffi-dev
+    - python-dev
+    - python-pip
+    # Simple firewall, should be on there by default
+    - ufw
 
 - name: make virtualenv and install python3 dependencies
   become_user: "{{USER}}"
@@ -80,3 +80,5 @@
     - jsonschema
     # Sentry client
     - raven
+    # Nice for debugging etc.
+    - ipython

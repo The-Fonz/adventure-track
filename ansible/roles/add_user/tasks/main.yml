@@ -3,8 +3,7 @@
     name: "{{USER}}"
     password: "{{PASSWORD}}"
 
-- name: set home dir ownership
-  # Set home dir ownership to user, is not done by default
+- name: set user home dir ownership
   file:
     path: "{{USER_ROOT}}"
     owner: "{{USER}}"

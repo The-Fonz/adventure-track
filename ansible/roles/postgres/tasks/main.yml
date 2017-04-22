@@ -1,7 +1,5 @@
 - name: make new postgres db
-  become: true
   become_user: postgres
-  become_method: sudo
   postgresql_db:
     name: "{{dbname}}"
     encoding: 'UTF-8'
@@ -10,18 +8,14 @@
     template: 'template0'
 
 - name: make new postgres user
-  become: true
   become_user: postgres
-  become_method: sudo
   postgresql_user:
     db: "{{dbname}}"
     name: "{{USER}}"
     password: "{{PASSWORD}}"
 
 - name: add postgis to db
-  become: true
   become_user: postgres
-  become_method: sudo
   postgresql_ext: name=postgis db={{dbname}}
 
 - name: put database url in environment file for easy cmdline use

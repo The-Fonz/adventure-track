@@ -4,40 +4,22 @@
     # Generates new password when not exists
     line: "AT_CROSSBAR_TICKET={{lookup('password', 'passwdlookup/crossbar-ticket-passwd.txt')}}"
 
-- name: add repo key
-  apt_key:
-    keyserver: hkps.pool.sks-keyservers.net
-    id: D58C6920
-
-- name: add repo
-  apt_repository:
-    repo: deb http://package.crossbar.io/ubuntu xenial main
-
-- name: install crossbar apt package
-  apt: name=crossbar update_cache=yes
+- name: install crossbar in virtualenv
+  become_user: "{{USER}}"
+  pip:
+    name: crossbar
+    virtualenv: "{{USER_ROOT}}/crossbar-venv"
+    virtualenv_python: python3.6
 
 - name: make crossbar config folder
   file:
     # Writes pid to this folder so must be accessible by user crossbar runs as
     owner: atuser
-    path: /etc/.crossbar
+    group: atuser
+    path: /home/atuser/.crossbar
     state: directory
 
 - name: configure crossbar node
   template:
     src: config.yaml
-    dest: /etc/.crossbar/config.yaml
-
-- name: create crossbar service config file
-  template:
-    src: crossbar.service
-    dest: /etc/systemd/system/crossbar.service
-
-- name: run crossbar service on boot
-  systemd:
-    name: crossbar
-    # Reload config first
-    daemon_reload: yes
-    # Start on boot
-    enabled: yes
-    state: started
+    dest: /home/atuser/.crossbar/config.yaml
