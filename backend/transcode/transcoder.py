@@ -137,7 +137,7 @@ class VidTranscoder(Transcoder):
         # TODO: Only transcode if resolution smaller than original
         cut = "-ss {cut[0]} -to {cut[1]}".format(cut=cutfromto) if cutfromto else ''
         # See https://trac.ffmpeg.org/wiki/Scaling%20(resizing)%20with%20ffmpeg for info on keeping aspect ratio
-        cmd = ("ffmpeg -y -i {src} {cut} -c:v libx264 -vf "
+        cmd = ("ffmpeg -y -i {src} {cut} -c:v libx264 -movflags +faststart -vf "
                "scale=w='min(iw,{conf[wh][0]})':h='min(ih,{conf[wh][1]})':force_original_aspect_ratio=decrease -crf 26 -c:a copy {dest}"
                 .format(src=src, cut=cut, conf=conf, dest=dest))
         stdout = await self.run_subprocess(cmd.split())
