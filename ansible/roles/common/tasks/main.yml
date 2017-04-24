@@ -82,3 +82,4 @@
     - raven
     # Nice for debugging etc.
     - ipython
+    - aioconsole
