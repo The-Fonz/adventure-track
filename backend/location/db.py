@@ -33,7 +33,9 @@ CREATE TABLE gps_point
 );
 -- Fast joins
 CREATE INDEX gps_point_user_id_index ON gps_point(user_id);
-CREATE INDEX gps_point_timestamp on gps_point(timestamp);
+CREATE INDEX gps_point_timestamp_index on gps_point(timestamp);
+-- Efficient index that only stores bbox of 128 rows by default
+CREATE INDEX gps_point_ptz_index ON gps_point USING BRIN (ptz);
 '''
 
 
