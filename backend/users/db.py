@@ -71,7 +71,7 @@ class Db():
         return db
 
     async def create_tables(self):
-        return await self.conn.execute(SQL_CREATE_TABLE_)
+        return await self.conn.execute(SQL_CREATE_TABLE_USERS)
 
     async def check_auth(self, auth_code):
         "Returns *False* if auth_code wrong, *user_id* if right, and *None* if user not found"
@@ -136,7 +136,7 @@ class Db():
                 raise Exception("Impossible!")
             try:
                 # Use nested transaction such that only this block fails and we can still use conn
-                async with conn.transaction():
+                async with self.conn.transaction():
                     id = await ins(u)
                 break
             except asyncpg.exceptions.UniqueViolationError as e:
@@ -205,14 +205,14 @@ if __name__=="__main__":
                         help="Import json file with list of users into db")
     args = parser.parse_args()
 
+    l = asyncio.get_event_loop()
+    db = l.run_until_complete(Db.create())
+
     if args.create:
-        engine = create_engine(environ["DB_URI_ATSITE"])
-        metadata.create_all(engine)
+        l.run_until_complete(db.create_tables())
         logger.info("Created tables")
 
     if args.test or args.importusers:
-        l = asyncio.get_event_loop()
-        db = l.run_until_complete(Db.create())
         try:
             if args.test:
                 l.run_until_complete(test_db_basics(db))

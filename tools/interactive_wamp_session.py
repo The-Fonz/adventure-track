@@ -1,6 +1,10 @@
 import asyncio
 import aioconsole
 
+import os
+# Avoid Sentry being loaded
+os.environ['AT_SENTRY_DSN'] = ''
+
 from backend.utils import BackendAppSession, getLogger
 
 logger = getLogger('interactive_wamp_session')
