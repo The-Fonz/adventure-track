@@ -6,49 +6,78 @@ import json
 
 import dateutil.parser
 import asyncpg
-from sqlalchemy import MetaData, Table, Column, Integer, String, DateTime, create_engine
-from sqlalchemy.dialects.postgresql import CHAR, JSONB
 
-from ..utils import record_to_dict, friendlyhash, getLogger, friendly_auth_code
+from ..utils import record_to_dict, friendlyhash, getLogger, friendly_auth_code, db_test_case_factory
 
 logger = getLogger('users.db')
 
-metadata = MetaData()
+SQL_CREATE_TABLE_USERS = '''
+-- Avoid clashing with 'user' builtin name
+CREATE TABLE users
+(
+  id                    SERIAL PRIMARY KEY,
+  -- Friendly ID for URL's and personal page
+  id_hash               CHAR(8) UNIQUE,
+  created               TIMESTAMP,
+  first_name            VARCHAR(255),
+  last_name             VARCHAR(255),
+  email                 VARCHAR(255),
+  telephone_mobile      VARCHAR(255),
+  -- Auth token for authentication, take care not to expose it!
+  auth_code             CHAR(12) UNIQUE
+);
 
-# Only used for table creation, no ORM
-# Avoid clashing with 'user' builtin name
-message = Table('users', metadata,
-    Column('id', Integer, primary_key=True),
-    # Friendly ID for URL's and personal page
-    Column('id_hash', CHAR(8), unique=True, index=True),
-    # Time that user was created
-    Column('created', DateTime),
-    Column('first_name', String(255), nullable=True),
-    Column('last_name', String(255), nullable=True),
-    Column('email', String(255), nullable=True),
-    Column('telephone_mobile', String(255), nullable=True),
-    # Auth token for authentication, should be used together with id_hash
-    # Take care not to expose it!
-    Column('auth_code', CHAR(8), nullable=True),
-    # Profile picture and resized versions
-    Column('profilepic_original', String(255), nullable=True),
-    Column('profilepic_versions', JSONB, nullable=True)
-)
+CREATE INDEX users_id_hash_index ON users(id_hash);
+
+CREATE TABLE users_profilepic
+(
+  id                SERIAL PRIMARY KEY,
+  user_id           INTEGER REFERENCES users(id),
+  path              VARCHAR(255),
+  created           TIMESTAMP,
+  -- True if original, false if transcoded
+  original          BOOLEAN,
+  -- Resolution info in pixels
+  width             SMALLINT,
+  height            SMALLINT,
+  -- Transcoder log
+  log               TEXT
+);
+
+CREATE INDEX users_profilepic_user_id on users_profilepic(user_id);
+
+CREATE TABLE users_bio
+(
+  id                SERIAL PRIMARY KEY,
+  user_id           INTEGER REFERENCES users(id),
+  created           TIMESTAMP,
+  -- Short description like "paraglider pilot, I do the occasional hike", more strict length restriction should be
+  -- applied on insertion
+  subtitle          VARCHAR(255),
+  -- Full bio text
+  body              TEXT
+);
+
+CREATE INDEX users_bio_user_id on users_bio(user_id);
+'''
 
 
 class Db():
     @classmethod
-    async def create(cls, loop=None):
-        "Use like `await Db.create()` to enable use of async methods"
-        db = Db()
-        db.pool = await asyncpg.create_pool(dsn=environ["DB_URI_ATSITE"])
+    async def create(cls, existingconn=None):
+        "Pass existingconn for unittesting"
+        db = cls()
+        db.conn = existingconn or await asyncpg.create_pool(dsn=environ["DB_URI_ATSITE"])
         return db
 
-    async def check_auth(self, id_hash, auth_code, existingconn=None):
-        "Returns *False* if auth_code wrong, *user_id if right, and *None* if user not found"
-        conn = existingconn or self.pool
+    async def create_tables(self):
+        return await self.conn.execute(SQL_CREATE_TABLE_)
+
+    async def check_auth(self, auth_code):
+        "Returns *False* if auth_code wrong, *user_id* if right, and *None* if user not found"
         out = False
-        user = await conn.fetchrow('SELECT id, auth_code FROM users WHERE id_hash=$1', id_hash)
+        # Auth code is always uppercase
+        user = await self.conn.fetchrow('SELECT id, auth_code FROM users WHERE auth_code=$1', auth_code.upper())
         if user:
             # Strip out any whitespace
             if auth_code.strip() == user['auth_code'].strip():
@@ -57,17 +86,15 @@ class Db():
             out = None
         return out
 
-    async def get_user_by_id(self, user_id, existingconn=None):
-        conn = existingconn or self.pool
-        user = await conn.fetchrow('SELECT * FROM users WHERE id=$1', user_id)
+    async def get_user_by_id(self, user_id):
+        user = await self.conn.fetchrow('SELECT * FROM users WHERE id=$1', user_id)
         if not user:
             raise Exception("User with id %s does not exist", user_id)
         return await record_to_dict(user)
 
-    async def getuser(self, id_hash, pass_auth_code=False, exclude_sensitive=False, existingconn=None):
+    async def getuser(self, id_hash, pass_auth_code=False, exclude_sensitive=False):
         "Get user in json format. Should never pass auth token, just for testing"
-        conn = existingconn or self.pool
-        user = await conn.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
+        user = await self.conn.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
         if not user:
             return None
         # Take care to make it a tuple to prevent making a set of letters
@@ -76,19 +103,16 @@ class Db():
             exclude = exclude.union(set(('email', 'telephone_mobile', 'id_hash', 'created', 'profilepic_original')))
         return await record_to_dict(user, exclude=exclude)
 
-    async def getuser_id(self, id_hash, existingconn=None):
-        conn = existingconn or self.pool
-        user_id = await conn.fetchval('SELECT id FROM users WHERE id_hash=$1', id_hash)
+    async def getuser_id(self, id_hash):
+        user_id = await self.conn.fetchval('SELECT id FROM users WHERE id_hash=$1', id_hash)
         return user_id
 
-    async def getuser_hash(self, id, existingconn=None):
-        conn = existingconn or self.pool
-        user_id_hash = await conn.fetchval('SELECT id_hash FROM users WHERE id=$1', id)
+    async def getuser_hash(self, id):
+        user_id_hash = await self.conn.fetchval('SELECT id_hash FROM users WHERE id=$1', id)
         return user_id_hash
 
-    async def insertuser(self, userjson, id_hash=None, id_hash_collision_retry=False, existingconn=None):
+    async def insertuser(self, userjson, id_hash=None, id_hash_collision_retry=False):
         "Make new user based on json representation"
-        conn = existingconn or self.pool
         u = dict()
         created = userjson.get('created', datetime.datetime.now())
         # URL-friendly and incremented-db-id-confuscating alphanumeric string identifier

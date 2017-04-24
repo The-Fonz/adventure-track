@@ -39,15 +39,15 @@ def main(wampsess, loop):
             bot.sendMessage(chat_id=cid, text=MSGS['already_auth'])
         # Not linked, we need to authenticate
         else:
-            # Check if user followed an auth link with "<user_id_hash> <user_auth_code>"
+            # Check if user followed an auth link with "<user_auth_code>"
             if len(args):
                 try:
-                    user_id_hash, user_auth_code = args
+                    user_auth_code = args
                 except ValueError:
                     bot.sendMessage(chat_id=cid, text=MSGS['authcode_invalid'])
                     return
                 # Returns a future
-                auth = wampsess.call('at.users.check_user_authcode', user_id_hash, user_auth_code)
+                auth = wampsess.call('at.users.get_user_id_by_authcode', user_auth_code)
                 # Must specify timeout!
                 auth = runcoro(asyncio.wait_for(auth, 2))
                 user_id = auth.result()

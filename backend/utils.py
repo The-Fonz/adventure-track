@@ -83,17 +83,17 @@ async def records_to_dict(records, **kwargs):
     return out
 
 
-async def friendlyhash():
-    "Generate random hash of length 8"
-    h = Hashids(salt=str(uuid.uuid4()), min_length=8)
+async def friendlyhash(length=8):
+    "Generate random hash"
+    h = Hashids(salt=str(uuid.uuid4()), min_length=length)
     # Just to make sure that it's length 8, should always be the case anyway
-    return h.encode(123)[:8]
+    return h.encode(123)[:length]
 
 
-async def friendly_auth_code():
-    "Generate friendly uppercase code of length 5"
-    h = Hashids(salt=str(uuid.uuid4()), min_length=5, alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-    return h.encode(456)[:5]
+async def friendly_auth_code(length=12):
+    "Generate friendly uppercase code"
+    h = Hashids(salt=str(uuid.uuid4()), min_length=length, alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+    return h.encode(456)[:length]
 
 
 class BackendAppSession(ApplicationSession):
@@ -127,13 +127,16 @@ class BackendAppSession(ApplicationSession):
         asyncio.get_event_loop().stop()
 
     @classmethod
-    def run_forever(cls):
+    def run_forever(cls, loop=None):
         """
         Convenience method to avoid repetition.
         Pass a stopcallback to finish work or queues, gets called just before loop is closed,
         with protocol as single argument.
         """
-        l = asyncio.get_event_loop()
+        if not loop:
+            l = asyncio.get_event_loop()
+        else:
+            l = loop
 
         runner = ApplicationRunner(url="ws://localhost:8080/ws", realm="realm1")
 
@@ -144,6 +147,7 @@ class BackendAppSession(ApplicationSession):
         l.add_signal_handler(signal.SIGTERM, l.stop)
 
         l.run_forever()
+
         logger.info("Loop stopped")
 
         # Must prevent a default as 3rd argument to avoid AttributeError

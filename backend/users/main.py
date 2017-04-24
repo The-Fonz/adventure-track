@@ -34,15 +34,21 @@ class UsersComponent(BackendAppSession):
             "Returns user hash"
             return await db.getuser_hash(user_id)
 
-        async def check_user_authcode(user_id_hash, user_auth_code):
-            return await db.check_auth(user_id_hash, user_auth_code)
+        async def get_user_id_by_authcode(user_auth_code):
+            return await db.check_auth(user_auth_code)
+
+        async def insert_user(usr):
+            "Insert properly formatted user"
+            id = await db.insertuser(usr)
+            return await db.get_user_by_id(id)
 
         self.register(get_user_by_id, 'at.users.get_user_by_id')
         self.register(get_user_by_hash, 'at.users.get_user_by_hash')
         self.register(get_user_by_hash_public, 'at.public.users.get_user_by_hash')
         self.register(get_user_id_by_hash, 'at.users.get_user_id_by_hash')
         self.register(get_user_hash_by_id, 'at.users.get_user_hash_by_id')
-        self.register(check_user_authcode, 'at.users.check_user_authcode')
+        self.register(get_user_id_by_authcode, 'at.users.get_user_id_by_authcode')
+        self.register(insert_user, 'at.users.insert_user')
 
 
 if __name__=="__main__":

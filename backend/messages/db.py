@@ -63,7 +63,7 @@ MESSAGE_SENSITIVE_FIELDS = {'telegram_message', 'log'}
 
 class Db():
     @classmethod
-    async def create(cls, loop=None, num_video_queues=2):
+    async def create(cls):
         "Use like `await Db.create()` to enable use of async methods"
         db = Db()
         db.pool = await asyncpg.create_pool(dsn=environ["DB_URI_ATSITE"])

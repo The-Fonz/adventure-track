@@ -17,14 +17,15 @@ async def site_factory(wampsess):
 
     async def client(request):
         "Should return 0 if invalid, otherwise user id integer"
-        user_id_hash = request.query.get('user')
-        user_auth_code = request.query.get('pass')
-        if not user_id_hash or not user_auth_code:
+        # We don't user password, can be anything
+        # user_pass = request.query.get('pass')
+        user_auth_code = request.query.get('user')
+        if not user_auth_code:
             logger.info("No user or pass provided...")
             # Livetrack24 returns status 200 on basically any error
             return web.Response(status=200, text='0')
         try:
-            user_id = await wampsess.call('at.users.check_user_authcode', user_id_hash, user_auth_code)
+            user_id = await wampsess.call('at.users.get_user_id_by_authcode', user_auth_code)
         except ApplicationError:
             logger.exception("Could not reach user service!")
             return web.HTTPInternalServerError(reason="Internal communication error")
