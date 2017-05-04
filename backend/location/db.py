@@ -98,9 +98,6 @@ class Db():
                 "timestamps": [r['timestamp'].isoformat() for r in recs]}
 
 
-class RollbackException(Exception): pass
-
-
 class SomeTestCase(db_test_case_factory(Db)):
     def test_invalidpt(self):
         invalidpt = {

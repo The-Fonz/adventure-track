@@ -42,7 +42,7 @@ def main(wampsess, loop):
             # Check if user followed an auth link with "<user_auth_code>"
             if len(args):
                 try:
-                    user_auth_code = args
+                    user_auth_code = args[0]
                 except ValueError:
                     bot.sendMessage(chat_id=cid, text=MSGS['authcode_invalid'])
                     return
@@ -58,7 +58,7 @@ def main(wampsess, loop):
                     bot.sendMessage(chat_id=cid, text=MSGS['authcode_successful'])
                 else:
                     bot.sendMessage(chat_id=cid, text=MSGS['authcode_failed'])
-                    logger.warning("Auth code failed, is %s", auth)
+                    logger.warning("Auth code failed, is %s", user_id)
             else:
                 bot.sendMessage(chat_id=cid, text=MSGS['please_auth'])
 

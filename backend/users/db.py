@@ -3,6 +3,8 @@ import asyncio
 import datetime
 from os import environ
 import json
+import sys
+import unittest
 
 import dateutil.parser
 import asyncpg
@@ -67,17 +69,17 @@ class Db():
     async def create(cls, existingconn=None):
         "Pass existingconn for unittesting"
         db = cls()
-        db.conn = existingconn or await asyncpg.create_pool(dsn=environ["DB_URI_ATSITE"])
+        db.pool = existingconn or await asyncpg.create_pool(dsn=environ["DB_URI_ATSITE"])
         return db
 
     async def create_tables(self):
-        return await self.conn.execute(SQL_CREATE_TABLE_USERS)
+        return await self.pool.execute(SQL_CREATE_TABLE_USERS)
 
     async def check_auth(self, auth_code):
         "Returns *False* if auth_code wrong, *user_id* if right, and *None* if user not found"
         out = False
         # Auth code is always uppercase
-        user = await self.conn.fetchrow('SELECT id, auth_code FROM users WHERE auth_code=$1', auth_code.upper())
+        user = await self.pool.fetchrow('SELECT id, auth_code FROM users WHERE auth_code=$1', auth_code.upper())
         if user:
             # Strip out any whitespace
             if auth_code.strip() == user['auth_code'].strip():
@@ -87,14 +89,14 @@ class Db():
         return out
 
     async def get_user_by_id(self, user_id):
-        user = await self.conn.fetchrow('SELECT * FROM users WHERE id=$1', user_id)
+        user = await self.pool.fetchrow('SELECT * FROM users WHERE id=$1', user_id)
         if not user:
             raise Exception("User with id %s does not exist", user_id)
         return await record_to_dict(user)
 
     async def getuser(self, id_hash, pass_auth_code=False, exclude_sensitive=False):
         "Get user in json format. Should never pass auth token, just for testing"
-        user = await self.conn.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
+        user = await self.pool.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
         if not user:
             return None
         # Take care to make it a tuple to prevent making a set of letters
@@ -104,14 +106,15 @@ class Db():
         return await record_to_dict(user, exclude=exclude)
 
     async def getuser_id(self, id_hash):
-        user_id = await self.conn.fetchval('SELECT id FROM users WHERE id_hash=$1', id_hash)
+        user_id = await self.pool.fetchval('SELECT id FROM users WHERE id_hash=$1', id_hash)
         return user_id
 
     async def getuser_hash(self, id):
-        user_id_hash = await self.conn.fetchval('SELECT id_hash FROM users WHERE id=$1', id)
+        user_id_hash = await self.pool.fetchval('SELECT id_hash FROM users WHERE id=$1', id)
         return user_id_hash
 
-    async def insertuser(self, userjson, id_hash=None, id_hash_collision_retry=False):
+    async def insertuser(self, userjson, id_hash=None, id_hash_collision_retry=False, existingconn=None):
+        conn = existingconn or await self.pool.acquire()
         "Make new user based on json representation"
         u = dict()
         created = userjson.get('created', datetime.datetime.now())
@@ -136,7 +139,7 @@ class Db():
                 raise Exception("Impossible!")
             try:
                 # Use nested transaction such that only this block fails and we can still use conn
-                async with self.conn.transaction():
+                async with conn.transaction():
                     id = await ins(u)
                 break
             except asyncpg.exceptions.UniqueViolationError as e:
@@ -151,42 +154,28 @@ class Db():
         return id
 
 
-class RollbackException(Exception): pass
-
-
-async def test_db_basics(db):
-    "Test user saving"
-    async with db.pool.acquire() as conn:
-        try:
-            async with conn.transaction():
-                # Hashids never makes swear words so we can be positive that this uid does not exist...
-                u = await db.getuser('fuckcunt', existingconn=conn)
-                assert u == None
-                fh = await friendlyhash()
-                user_1 = {
-                    'first_name': "Fonz",
-                    'last_name': "the Lion",
-                    'email': 'hi@there431-9581345098-2435.com',
-                    'telephone_mobile': '023535-1029213890'
-                }
-                await db.insertuser(user_1, id_hash=fh, existingconn=conn)
-                u = await db.getuser(fh, pass_auth_code=True, existingconn=conn)
-                assert u['first_name'] == "Fonz"
-                assert len(u['auth_code']) == 5
-                u = await db.getuser(fh, existingconn=conn)
-                assert u.get('auth_code', -1) == -1
-                # Insert identical id_hash with retry
-                await db.insertuser(user_1, id_hash=fh, id_hash_collision_retry=True, existingconn=conn)
-                # Insert identical id_hash
-                try:
-                    await db.insertuser(user_1, id_hash=fh, existingconn=conn)
-                    raise Warning("Did not throw unique error!")
-                except asyncpg.exceptions.UniqueViolationError:
-                    pass
-                # Can't do anything after this, will throw asyncpg.exceptions.InFailedSQLTransactionError
-                raise RollbackException
-        except RollbackException:
-            pass
+class TestDb(db_test_case_factory(Db)):
+    def test_basics(self):
+        # Hashids never makes swear words so we can be positive that this uid does not exist...
+        u = self.lru(db.getuser('fuckcunt'))
+        self.assertIsNone(u)
+        fh = self.lru(friendlyhash())
+        user_1 = {
+            'first_name': "Fonz",
+            'last_name': "the Lion",
+            'email': 'hi@there431-9581345098-2435.com',
+            'telephone_mobile': '023535-1029213890'
+        }
+        self.lru(db.insertuser(user_1, id_hash=fh))
+        u = self.lru(db.getuser(fh, pass_auth_code=True))
+        self.assertEqual(u['first_name'], "Fonz")
+        self.assertEqual(len(u['auth_code']), 12)
+        u = self.lru(db.getuser(fh))
+        self.assertEqual(u.get('auth_code', -1), -1)
+        # Insert identical id_hash with retry
+        self.lru(db.insertuser(user_1, id_hash=fh, id_hash_collision_retry=True))
+        # Insert identical id_hash
+        self.assertRaises(asyncpg.exceptions.UniqueViolationError, self.awrap(db.insertuser), user_1, id_hash=fh)
 
 
 if __name__=="__main__":
@@ -212,18 +201,19 @@ if __name__=="__main__":
         l.run_until_complete(db.create_tables())
         logger.info("Created tables")
 
-    if args.test or args.importusers:
+    if args.test:
+        # Pass only system name, ignore other args
+        unittest.main(verbosity=1, argv=sys.argv[:1])
+
+    if args.importusers:
         try:
-            if args.test:
-                l.run_until_complete(test_db_basics(db))
-            elif args.importusers:
-                with open(args.importusers, 'r') as f:
-                    users = json.load(f)
-                if not 'y' in input("Continue loading {} messages? [y/N] ".format(len(users))).lower():
-                    raise Warning("Exiting...")
-                coros = [db.insertuser(u) for u in users]
-                l.run_until_complete(asyncio.wait(coros))
-                logger.info("Inserted all users")
+            with open(args.importusers, 'r') as f:
+                users = json.load(f)
+            if not 'y' in input("Continue loading {} messages? [y/N] ".format(len(users))).lower():
+                raise Warning("Exiting...")
+            coros = [db.insertuser(u) for u in users]
+            l.run_until_complete(asyncio.wait(coros))
+            logger.info("Inserted all users")
         finally:
             l.close()
         logger.info("Completed successfully")
