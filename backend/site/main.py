@@ -29,7 +29,8 @@ async def site_factory(wampsess, middlewares):
     async def frontpage(request):
         msgs = []
         msgsLoadError = ''
-        adventures = []
+        advs = []
+        advsLoadError = ''
         try:
             # Get n most recent messages, unique by user
             msgs = await wampsess.call('at.messages.uniquemsgs', n=5)
@@ -44,13 +45,20 @@ async def site_factory(wampsess, middlewares):
             # TODO: Log to Sentry
             # Automatically prints exception information
             logger.exception("Could not reach other services")
+        try:
+            # Get most recent adventures
+            advs = await wampsess.call('at.adventures.get_adventures')
+        except ApplicationError:
+            advsLoadError += "There was an error while retrieving adventures. We've been notified!"
+            logger.exception("Could not reach adventures service")
         return {
-            'adventures': adventures,
             'messages': msgs,
-            'msgsLoadError': msgsLoadError
+            'msgsLoadError': msgsLoadError,
+            'adventures': advs,
+            'advsLoadError': advsLoadError
         }
 
-    async def trackuser(request):
+    async def track_user(request):
         user_id_hash = request.match_info.get('user_id_hash')
         try:
             user = await wampsess.call('at.users.get_user_by_hash', user_id_hash)
@@ -61,7 +69,20 @@ async def site_factory(wampsess, middlewares):
             logger.exception("Could not reach at.users.get_user_by_hash")
             return errpage(request, "Could not reach user service", 500)
         context = {'user': user}
-        response = aiohttp_jinja2.render_template('trackuser.html', request, context)
+        response = aiohttp_jinja2.render_template('track_user.html', request, context)
+        return response
+
+    async def track_adventure(request):
+        adventure_url_hash = request.match_info.get('adventure_url_hash')
+        try:
+            adv = await wampsess.call('at.adventures.get_adventure_by_hash', adventure_url_hash)
+            if not adv:
+                return errpage(request, "Adventure {} does not exist".format(adventure_url_hash), 404)
+        except ApplicationError:
+            logger.exception("Could not reach at.adventures.get_adventure_by_hash")
+            return errpage(request, "Could not reach adventure service", 500)
+        context = {'adventure': adv}
+        response = aiohttp_jinja2.render_template('track_adventure.html', request, context)
         return response
 
     app = web.Application(middlewares=middlewares)
@@ -69,7 +90,8 @@ async def site_factory(wampsess, middlewares):
     aiohttp_jinja2.setup(app, loader=jinja2.PackageLoader('backend.site'))
 
     app.router.add_get('/', frontpage)
-    app.router.add_get(r'/u/{user_id_hash}', trackuser)
+    app.router.add_get(r'/u/{user_id_hash}', track_user)
+    app.router.add_get(r'/a/{adventure_url_hash}', track_adventure)
 
     loop = asyncio.get_event_loop()
 

@@ -9,11 +9,37 @@ AdventureTrack - Share your adventure
 <section class="hero is-primary">
     <div class="hero-body">
         <div class="container">
-            <div class="columns is-vcentered">
+            <div class="columns">
                 <div class="column">
-                    <p class="subtitle">Share your adventure!</p>
+                    <p class="subtitle">Share your adventure with the world by posting location updates, photos and video from your phone. Interested in using this for your personal adventure or adventure race?</p>
+                    <a href="mailto:info@adventure-track.com" class="button is-link">Contact us</a>
                 </div>
                 <div class="column">
+                    <h1 class="title">
+                        Adventures
+                    </h1>
+                    {% if advsLoadError %}
+                    <div class="notification is-danger">
+                      {{advsLoadError}}
+                    </div>
+                    {% else %}
+                        {% for adv in adventures %}
+                        {% set adv_page_url = '/a/'+adv.url_hash %}
+                        <div class="card">
+                          <div class="card-content">
+                            <!--<a href="{{adv_page_url}}">-->
+                                <p class="title" style="color:#4a4a4a;">{{adv.name}}</p>
+                            <!--</a>-->
+                            <div class="content">
+                              {{adv.description or ''}}
+                            </div>
+                          </div>
+                            <footer class="card-footer">
+                                <a href="{{adv_page_url}}" class="card-footer-item">Follow race...</a>
+                            </footer>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
