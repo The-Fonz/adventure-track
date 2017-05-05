@@ -50,6 +50,21 @@ class AdventuresComponent(BackendAppSession):
 
         self.register(get_adventures_by_user_id, 'at.adventures.get_adventures_by_user_id')
 
+        async def public_get_users_by_adventure_url_hash(adv_hash):
+            # First retrieve adventure id
+            adv = await self.db.get_adventure_by_hash(adv_hash)
+            # Now get all user links
+            links = await self.db.get_adventure_links(adv['id'])
+            out = []
+            # Get all users that these links refer to
+            for link in links:
+                usr = await self.call('at.users.get_user_by_id', link['user_id'])
+                out.append(usr)
+            logger.debug("Returned %s users for adventure id=%s", len(out), adv['id'])
+            return out
+
+        self.register(public_get_users_by_adventure_url_hash, 'at.public.adventures.get_users_by_adventure_url_hash')
+
 
 if __name__=="__main__":
     AdventuresComponent.run_forever()

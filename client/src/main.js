@@ -85,6 +85,9 @@ connection.onopen = function (session, details) {
     function receiveUserHandler(usr) {
         db.user_stream.receiveUsers([usr]);
     }
+    function receiveUsersHandler(usrs) {
+        db.user_stream.receiveUsers(usrs);
+    }
 
     if (pagetype === 'u') {
         console.info("Initializing user track page for user "+uid);
@@ -114,11 +117,11 @@ connection.onopen = function (session, details) {
     } else if (pagetype === 'a') {
         console.info("Initializing adventure page for adventure " + uid);
 
-        session.call('at.public.users.get_user_by_hash', [uid]).then(
-            receiveUserHandler,
+        session.call('at.public.adventures.get_users_by_adventure_url_hash', [uid]).then(
+            receiveUsersHandler,
             (err) => {
-                console.error("Error getting user by hash");
-                let errmsg = "There was an error loading the user. We've been notified!";
+                console.error("Error getting users by adventure url hash");
+                let errmsg = "There was an error loading the users. We've been notified!";
                 blog.set('messagesLoadError', errmsg);
             }
         );
