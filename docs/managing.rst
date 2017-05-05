@@ -32,3 +32,18 @@ To see output from the *nginx*, *crossbar* or *supervisor* processes, use *syste
 Nginx access and error logs can be found in ``/var/log/nginx/``.
 
 Microservice logs can be tailed with *supervisorctl*, or accessed in the ``/home/atuser`` folder.
+
+Copying data between production and dev
+=======================================
+The database can easily be dumped and restored using something like:
+
+- Get the db dump from server and save locally: ``ssh root@DOMAIN.COM 'su - postgres -c "pg_dump -Fc -d atsite"' > ./backup_folder/backup_name.pgdump``
+- Drop within VM with something like ``su - postgres 'dropdb atsite'``
+- Restore within VM with ``pg_restore -d atsite backup/file/path.pgdump``
+
+Then media files can be copied with:
+
+- Get direct ssh access to VM by copying the output of ``vagrant ssh-config <desired_hostname>`` to ``$HOME/.ssh/config``
+- Then copy all media files with rsync by ssh-ing into the VM and sharing keys (-A option): ``ssh -A <desired_hostname> 'rsync -a root@DOMAIN.COM:/home/atuser/media/ /home/atuser/media'``
+
+Dumping and importing the database can also be combined into one command by using the ``-A`` option on ``ssh`` (assuming that the server keys are stored on the host machine but we don't want to copy them to the VM).
