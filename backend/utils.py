@@ -23,11 +23,14 @@ logger = getLogger('utils')
 
 def convert_to_datetime(s):
     """
-    Converts an ISO string to datetime, but not if it's already a datetime obj.
+    Converts an ISO string to datetime, but not if it's already a datetime obj. None stays None.
     :param s: String or datetime.datetime
     :return: datetime.datetime
     """
-    return s if isinstance(s, datetime.datetime) else dateutil.parser.parse(s)
+    if s == None:
+        return None
+    else:
+        return s if isinstance(s, datetime.datetime) else dateutil.parser.parse(s)
 
 
 def ptz_wkt_to_dict(ptz_wkt):

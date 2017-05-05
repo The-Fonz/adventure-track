@@ -1,3 +1,5 @@
+import datetime
+
 from autobahn.wamp.exception import ApplicationError
 
 from .db import Db
@@ -17,9 +19,31 @@ class MessagesComponent(BackendAppSession):
         async def uniquemsgs(n=5):
             return await db.uniquemsgs(n=n)
 
-        async def fetchmsgs(user_id_hash):
+        async def get_msgs_by_user_id(user_id_hash):
             user_id = await self.call('at.users.get_user_id_by_hash', user_id_hash)
             return await db.getmsgs(user_id, exclude_sensitive=True)
+
+        async def get_msgs_by_adventure_hash(adventure_url_hash):
+            out = []
+            # Get adventure ID first
+            adv = await self.call('at.adventures.get_adventure_by_hash', adventure_url_hash)
+            if not adv:
+                raise Warning("Adventure not found")
+            adv_id = adv['id']
+            # Now get all links with users
+            links = await self.call('at.adventures.get_adventure_links_by_adv_id', adv_id)
+            logger.debug("Found %s links for adventure id=%s name=%s", len(links), adv_id, adv['name'])
+            # Get all user content from start of adventure to end
+            for link in links:
+                user_id = link['user_id']
+                role = link['role']
+                # Make sure to set values if the value of adv['start'] is None
+                start = adv.get('start') or datetime.datetime.min
+                end = adv.get('stop') or datetime.datetime.max
+                msgs = await db.getmsgs(user_id, start=start, end=end, exclude_sensitive=True)
+                logger.debug("Found %s messages for user id=%s in adventure id=%s start=%s end=%s", len(msgs), user_id, adv_id, start, end)
+                out.extend(msgs)
+            return out
 
         async def pub_msg_update(msg_id):
             msg = await db.getmsg(msg_id, exclude_sensitive=True)
@@ -64,7 +88,8 @@ class MessagesComponent(BackendAppSession):
                 await pub_msg_update(media['msg_id'])
 
         self.register(uniquemsgs, 'at.messages.uniquemsgs')
-        self.register(fetchmsgs, 'at.public.messages.fetchmsgs')
+        self.register(get_msgs_by_user_id, 'at.public.messages.fetchmsgs')
+        self.register(get_msgs_by_adventure_hash, 'at.public.messages.get_msgs_by_adventure_hash')
         self.register(insertmsg, 'at.messages.insertmsg')
         self.subscribe(insertmedia, 'at.transcode.finished')
 

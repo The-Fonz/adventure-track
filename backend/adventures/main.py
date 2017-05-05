@@ -22,6 +22,11 @@ class AdventuresComponent(BackendAppSession):
 
         self.register(get_adventure_by_hash, 'at.adventures.get_adventure_by_hash')
 
+        async def get_adventure_links_by_adv_id(adv_id):
+            return await self.db.get_adventure_links(adv_id)
+
+        self.register(get_adventure_links_by_adv_id, 'at.adventures.get_adventure_links_by_adv_id')
+
 
 if __name__=="__main__":
     AdventuresComponent.run_forever()

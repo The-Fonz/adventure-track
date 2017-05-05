@@ -4,10 +4,9 @@ import datetime
 from os import environ
 import json
 
-import dateutil.parser
 import asyncpg
 
-from ..utils import record_to_dict, records_to_dict
+from ..utils import record_to_dict, records_to_dict, convert_to_datetime
 
 logger = logging.getLogger('messages.db')
 
@@ -87,15 +86,20 @@ class Db():
             return None
         return await record_to_dict(row, exclude=MESSAGE_SENSITIVE_FIELDS)
 
-    async def getmsgs(self, user_id, exclude_sensitive=True, existingconn=None):
+    async def getmsgs(self, user_id, start=datetime.datetime.min, end=datetime.datetime.max, exclude_sensitive=True, existingconn=None):
         # Allow passing in an existing connection for unittesting
         conn = existingconn or self.pool
+        # Make sure they're datetime.datetime
+        start = convert_to_datetime(start)
+        end = convert_to_datetime(end)
         # Convert to json list of msgs
         rows = await conn.fetch('''
         SELECT * FROM message LEFT OUTER JOIN
             (SELECT msg_id, json_agg(r) AS media FROM media AS r GROUP BY msg_id)
-          AS m ON message.id=m.msg_id WHERE message.user_id=$1 ORDER BY message.timestamp DESC;
-          ''', user_id)
+          AS m ON message.id=m.msg_id
+          WHERE message.user_id=$1 AND message.timestamp >= $2 AND message.timestamp <= $3
+          ORDER BY message.timestamp DESC;
+          ''', user_id, start, end)
         return await records_to_dict(rows, exclude=MESSAGE_SENSITIVE_FIELDS)
 
     async def uniquemsgs(self, n=5, exclude_sensitive=True, existingconn=None):
@@ -118,7 +122,7 @@ class Db():
         timestamp = msg.get('timestamp', None)
         if timestamp:
             # Parse if ISO string
-            timestamp = timestamp if type(timestamp) == datetime.datetime else dateutil.parser.parse(timestamp)
+            timestamp = convert_to_datetime(timestamp)
         title = msg.get('title', None)
         text = msg.get('text', None)
         # Let Postgres return generated id and fetch its value
