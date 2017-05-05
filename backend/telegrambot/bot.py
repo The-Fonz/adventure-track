@@ -144,9 +144,32 @@ def main(wampsess, loop):
             msg['audio_original'] = os.path.relpath(audpath, start=mediapath)
             logger.debug("Saved audio as {}".format(audpath))
         if t.location:
-            # TODO: Send location to location service
-            logger.debug(t.location)
-            bot.sendMessage(chat_id=cid, text="Location not supported yet")
+            # Construct gps_point
+            gps_pt = {
+                'source': 'telegram',
+                # Is datetime.datetime
+                'timestamp': t.date.isoformat(),
+                'user_id': link['user_id'],
+                'ptz': {
+                    'longitude': t.location.longitude,
+                    'latitude': t.location.latitude,
+                    # Indicate that no height is provided
+                    'height_m_msl': 0
+                }
+            }
+            logger.info("Logging point: %s", gps_pt)
+            # Returns a future
+            try:
+                ptinsert = wampsess.call('at.location.insert_gps_point', gps_pt)
+                # Must specify timeout!
+                runcoro(asyncio.wait_for(ptinsert, 2))
+                bot.sendMessage(chat_id=cid, text="Successfully saved your location")
+            except (ApplicationError, asyncio.TimeoutError):
+                logger.exception("Could not save location")
+                bot.sendMessage(chat_id=cid, text="Error saving location, we've been notified!")
+            # We don't have a message to process, just a location, so stop here
+            finally:
+                return
         try:
             fut = wampsess.call('at.messages.insertmsg', msg)
             fut = runcoro(asyncio.wait_for(fut, 2))
