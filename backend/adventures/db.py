@@ -86,6 +86,12 @@ class Db(MicroserviceDb):
         rec = await self.pool.fetchrow('''SELECT * FROM adventures_users_link WHERE id = $1;''', link_id)
         return await record_to_dict(rec)
 
+    async def get_adventure_user_links_by_user_id(self, user_id):
+        recs = await self.pool.fetch('''SELECT * FROM adventures_users_link WHERE user_id=$1;''', user_id)
+        if not recs:
+            return None
+        return await records_to_dict(recs)
+
     async def get_adventure_links(self, adv_id):
         recs = await self.pool.fetch('''SELECT * FROM adventures_users_link WHERE adventure_id = $1;''', adv_id)
         return await records_to_dict(recs)

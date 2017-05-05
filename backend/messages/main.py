@@ -47,15 +47,28 @@ class MessagesComponent(BackendAppSession):
 
         async def pub_msg_update(msg_id):
             msg = await db.getmsg(msg_id, exclude_sensitive=True)
+            # First emit on user channel
             try:
                 user_id_hash = await self.call('at.users.get_user_hash_by_id', msg['user_id'])
                 # Emit event on channel at.messages.user.<id_hash>
                 userchannel = 'at.messages.user.{}'.format(user_id_hash)
                 # For some reason this method is synchronous
                 self.publish(userchannel, msg)
-                logger.debug("Published update on channel %s for user_id %s", userchannel, msg['user_id'])
+                logger.debug("Published message id=%s on channel %s for user_id %s", msg_id, userchannel, msg['user_id'])
             except ApplicationError:
                 logger.exception("Failed to retrieve user hash or publish update")
+            # Now emit on adventure channel(s)
+            try:
+                now = datetime.datetime.now().isoformat()
+                # Only get adventures that are currently active
+                advs = await self.call('at.adventures.get_adventures_by_user_id', msg['user_id'], active_at=now)
+                for adv in advs:
+                    adv_channel = 'at.messages.adventure.{}'.format(adv['url_hash'])
+                    self.publish(adv_channel, msg)
+                    logger.debug("Published message id=%s on channel %s for user_id %s", msg_id, adv_channel, msg['user_id'])
+            except ApplicationError:
+                logger.exception("Failed to retrieve adventures or publish update")
+
 
         async def insertmsg(msg):
             logger.debug("Inserting message...")
