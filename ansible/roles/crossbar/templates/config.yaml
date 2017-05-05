@@ -42,6 +42,17 @@ workers:
           caller: false
           publisher: false
         cache: true
+      - uri: 'at.messages.adventure.'
+        match: prefix
+        allow:
+          call: false
+          register: false
+          publish: false
+          subscribe: true
+        disclose:
+          caller: false
+          publisher: false
+        cache: true
   transports:
   - type: web
     endpoint:

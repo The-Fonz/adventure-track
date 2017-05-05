@@ -73,6 +73,9 @@ connection.onopen = function (session, details) {
 
     console.log("Connected");
 
+    // Either 'u' for user or 'a' for adventure
+    let pagetype = window.location.pathname.split('/')[1];
+
     let uid = window.location.pathname.split('/')[2];
 
     function receiveMsgHandler(msgs) {
@@ -83,32 +86,60 @@ connection.onopen = function (session, details) {
         db.user_stream.receiveUsers([usr]);
     }
 
-    session.call('at.public.users.get_user_by_hash', [uid]).then(
-        receiveUserHandler,
-        (err) => {
-            console.error("Error getting user by hash");
-            let errmsg = "There was an error loading the user. We've been notified!";
-            blog.set('messagesLoadError', errmsg);
-        }
-    );
+    if (pagetype === 'u') {
+        console.info("Initializing user track page for user "+uid);
+        session.call('at.public.users.get_user_by_hash', [uid]).then(
+            receiveUserHandler,
+            (err) => {
+                console.error("Error getting user by hash");
+                let errmsg = "There was an error loading the user. We've been notified!";
+                blog.set('messagesLoadError', errmsg);
+            }
+        );
+        session.call('at.public.messages.fetchmsgs', [uid]).then(
+            // Receives response
+            receiveMsgHandler,
+            // Error handler
+            (err) => {
+                console.error("Error fetching messages");
+                let errmsg = "There was an error loading the messages. We've been notified!";
+                blog.set('messagesLoadError', errmsg);
+            }
+        );
+        // Unpack list of args
+        session.subscribe(`at.messages.user.${uid}`, args => receiveMsgHandler(args[0])).then(
+            sub => console.log('subscribed to topic'),
+            err => console.error('failed to subscribe')
+        );
+    } else if (pagetype === 'a') {
+        console.info("Initializing adventure page for adventure " + uid);
 
-    session.call('at.public.messages.fetchmsgs', [uid]).then(
-        // Receives response
-        receiveMsgHandler,
-        // Error handler
-        // TODO: Send to sentry (automatic?)
-        (err) => {
-            console.error("Error fetching messages");
-            let errmsg = "There was an error loading the messages. We've been notified!";
-            blog.set('messagesLoadError', errmsg);
-        }
-    );
-
-    // Unpack list of args
-    session.subscribe(`at.messages.user.${uid}`, args => receiveMsgHandler(args[0])).then(
-        sub => console.log('subscribed to topic'),
-        err => console.error('failed to subscribe')
-    );
+        session.call('at.public.users.get_user_by_hash', [uid]).then(
+            receiveUserHandler,
+            (err) => {
+                console.error("Error getting user by hash");
+                let errmsg = "There was an error loading the user. We've been notified!";
+                blog.set('messagesLoadError', errmsg);
+            }
+        );
+        session.call('at.public.messages.get_msgs_by_adventure_hash', [uid]).then(
+            // Receives response
+            receiveMsgHandler,
+            // Error handler
+            (err) => {
+                console.error("Error fetching messages");
+                let errmsg = "There was an error loading the messages. We've been notified!";
+                blog.set('messagesLoadError', errmsg);
+            }
+        );
+        // Unpack list of args
+        session.subscribe(`at.messages.adventure.${uid}`, args => receiveMsgHandler(args[0])).then(
+            sub => console.log('subscribed to adventure messages topic'),
+            err => console.error('failed to subscribe')
+        );
+    } else {
+        console.error("Invalid page type " + pagetype)
+    }
 };
 
 // fired when connection was lost (or could not be established)
