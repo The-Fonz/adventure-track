@@ -160,6 +160,16 @@ class BackendAppSession(ApplicationSession):
         sys.exit()
 
 
+class MicroserviceDb():
+    "Inherit from this class to create service Db"
+    @classmethod
+    async def create(cls, existingconn=None):
+        "Pass existingconn for unittesting"
+        db = cls()
+        db.pool = existingconn or await asyncpg.create_pool(dsn=os.environ["DB_URI_ATSITE"])
+        return db
+
+
 def db_test_case_factory(db_cls):
     """
     Use this to create TestCase class with proper db.

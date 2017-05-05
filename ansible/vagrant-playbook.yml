@@ -18,8 +18,10 @@
     - role: crossbar
       tags: ["crossbar"]
     - role: postgres
+      tags: ["postgres"]
       dbname: atsite
-    - supervisord
+    - role: supervisord
+      tags: ["supervisor"]
     - role: nginx
       tags: ["nginx"]
     - firewall
