@@ -2,45 +2,11 @@
 body {
     overflow: auto;
 }
-.leftpane {
-    position: relative;
-    float: left;
-    width: 64%;
+.panes {
     height: 100%;
 }
 .rightpane {
-    float: right;
-    width: 36%;
-    height: 100%;
     overflow-y: scroll;
-}
-
-/*
- * Map occupies top part, timeline gets bottom part.
- * NOTE: Timeline needs fixed height option on init.
- */
-#map-view {
-    position: absolute;
-    top: 0;
-    bottom: 150px;
-    width: 100%;
-}
-#timeline {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-}
-
-/* Avoid text select on double click by using this class */
-.noselect {
-    -webkit-user-select: none;
-    /* webkit (safari, chrome) browsers */
-    -moz-user-select: none;
-    /* mozilla browsers */
-    -khtml-user-select: none;
-    /* webkit (konqueror) browsers */
-    -ms-user-select: none;
-    /* IE10+ */;
 }
 
 /* Timeline */

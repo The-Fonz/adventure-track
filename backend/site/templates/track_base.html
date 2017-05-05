@@ -16,10 +16,13 @@ adventure-track
 
 {% block base_body %}
 
-<div>
-    <div class="leftpane noselect">
+<div class="columns panes">
+    {# Hide on mobile for now, should use tabs instead #}
+    <div class="column leftpane is-half-tablet is-two-thirds-desktop is-hidden-mobile is-unselectable">
         <div id="map-view">
-            <section class="hero is-medium is-primary is-bold">
+            <section class="hero is-medium is-primary is-bold"
+            {# Quick hack #}
+            style="height: calc(100vh - 150px);">
               <div class="hero-body" style="padding-top:0;padding-bottom:0;height:100%;">
                 <div class="container" style="position:relative;top:50%;transform:translateY(-50%);">
                   <h1 class="title">
@@ -34,8 +37,10 @@ adventure-track
         </div>
         <div id="timeline"></div>
     </div>
-    <div class="rightpane">
-        <div id="blog"></div>
+    <div class="column rightpane">
+        <div id="blog">
+            <div class="loader"></div>
+        </div>
     </div>
 </div>
 
