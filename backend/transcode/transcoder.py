@@ -40,9 +40,9 @@ class Transcoder:
             self.m = await self.pq.get()
             logger.debug("Consumed from queue: %s", self.m)
             try:
-                media = self.m[1]
+                media = self.m[2]
                 media_transcoded = media.copy()
-                conf = self.m[2]
+                conf = self.m[3]
                 media_transcoded['update'] = conf.get('update', True)
                 src = media['path']
                 # Paths can be absolute or relative to media root

@@ -1,4 +1,6 @@
 import asyncio
+from itertools import count
+cnt = count()
 
 from ..utils import BackendAppSession, getLogger
 from .transcoder import VidThumbTranscoder, VidTranscoder, ImageTranscoder, AudioTranscoder
@@ -47,7 +49,8 @@ class TranscodeComponent(BackendAppSession):
             async def put_queue(q, resolutions):
                 for i, res in enumerate(resolutions):
                     # Priority from 1 to len(resolutions)
-                    await q.put((i+1, m, res))
+                    # Use unique count to make sure never to compare dict m or res when i is equal
+                    await q.put((i+1, next(cnt), m, res))
             # Put tasks on queues
             mt = m['type']
             if mt == 'video':
