@@ -62,10 +62,11 @@ class MessagesComponent(BackendAppSession):
                 now = datetime.datetime.now().isoformat()
                 # Only get adventures that are currently active
                 advs = await self.call('at.adventures.get_adventures_by_user_id', msg['user_id'], active_at=now)
-                for adv in advs:
-                    adv_channel = 'at.messages.adventure.{}'.format(adv['url_hash'])
-                    self.publish(adv_channel, msg)
-                    logger.debug("Published message id=%s on channel %s for user_id %s", msg_id, adv_channel, msg['user_id'])
+                if advs:
+                    for adv in advs:
+                        adv_channel = 'at.messages.adventure.{}'.format(adv['url_hash'])
+                        self.publish(adv_channel, msg)
+                        logger.debug("Published message id=%s on channel %s for user_id %s", msg_id, adv_channel, msg['user_id'])
             except ApplicationError:
                 logger.exception("Failed to retrieve adventures or publish update")
 
