@@ -9,6 +9,7 @@ import asyncpg
 import logging
 import datetime
 import unittest
+import pytz
 
 import dateutil.parser
 from hashids import Hashids
@@ -20,6 +21,18 @@ def getLogger(name):
     return logging.getLogger(name)
 
 logger = getLogger('utils')
+
+
+def localtime_to_utc(dt, remove_tzinfo=False):
+    "Converts naive datetime.datetime object from local timezone to UTC"
+    # Assumes that naive datetime object is in local tz (see docs)
+    # Will also work correctly if it already has tz information
+    dt = dt.astimezone(pytz.utc)
+    # For asyncpg compatibility
+    if remove_tzinfo:
+        dt = dt.replace(tzinfo=None)
+    return dt
+
 
 def convert_to_datetime(s):
     """

@@ -103,7 +103,6 @@ class Map extends EventEmitter {
         this.map.easeTo({center: lonlat});
     }
     addMsgMarker(msg) {
-        console.log(msg);
         let el = document.createElement('div');
         // Identify message type
         el.className = 'msg-marker ' + msg.className;

@@ -10,7 +10,7 @@ from telegram.ext.filters import Filters
 from autobahn.wamp.exception import ApplicationError
 
 from .replies import MSGS
-from ..utils import getLogger
+from ..utils import getLogger, localtime_to_utc
 
 logger = getLogger('telegrambot.bot')
 
@@ -91,8 +91,11 @@ def main(wampsess, loop):
             msg['telegram_message'] = json.dumps(t.to_dict())
         except Exception:
             pass
+        # Python Telegram Bot converts the Unix time it gets from Telegram
+        # into naive local timezone using datetime.fromtimestamp()
+        timestamp = localtime_to_utc(t.date, remove_tzinfo=True)
         # Serialize to ISO format so WAMP can send it over the wire
-        msg['timestamp'] = t.date.isoformat()
+        msg['timestamp'] = timestamp.isoformat()
         msg['user_id'] = link['user_id']
         if t.video:
             vid = t.video
@@ -147,8 +150,7 @@ def main(wampsess, loop):
             # Construct gps_point
             gps_pt = {
                 'source': 'telegram',
-                # Is datetime.datetime
-                'timestamp': t.date.isoformat(),
+                'timestamp': msg['timestamp'],
                 'user_id': link['user_id'],
                 'ptz': {
                     'longitude': t.location.longitude,
