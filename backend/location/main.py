@@ -15,9 +15,9 @@ class LocationComponent(BackendAppSession):
         async def insert_gps_point(gps_pt):
             return await db.insert_gps_point(gps_pt)
 
-        async def get_gps_points(user_id_hash):
+        async def get_tracks_by_user_id_hash(user_id_hash):
             # TODO: Add start, end keywords
-            user = await self.call('at.users.get_user_by_hash')
+            user = await self.call('at.users.get_user_by_hash', user_id_hash)
             if not user:
                 msg = "User id hash {} does not exist".format(user_id_hash)
                 logger.warning(msg)
@@ -28,7 +28,7 @@ class LocationComponent(BackendAppSession):
 
 
         self.register(insert_gps_point, 'at.location.insert_gps_point')
-        self.register(get_gps_points, 'at.location.get_gps_points')
+        self.register(get_tracks_by_user_id_hash, 'at.public.location.get_tracks_by_user_id_hash')
 
 
 if __name__=="__main__":

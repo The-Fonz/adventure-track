@@ -26,11 +26,11 @@ function widthMax(w) {
 
 let db = new Db();
 
-// TODO: Implement map
-// let map = new Map('map-view');
+// Implement map
+let map = new Map('map-view');
 
 db.on('newTracks', (newTracks) => {
-    // map.updateTracks(newTracks);
+    map.updateTracks(newTracks);
 });
 
 let items = new vis.DataSet(db.messages);
@@ -42,7 +42,7 @@ let timeline = new vis.Timeline(
 db.on('newMsgs', (newMsgs) => {
     forEach(newMsgs, (m) => {
         items.add(m);
-        // map.addMsgMarker(m);
+        map.addMsgMarker(m);
     });
     timeline.fit();
 });
@@ -50,7 +50,7 @@ db.on('newMsgs', (newMsgs) => {
 db.on('newUsers', (newUsers) => {
     // Should only add if user is active athlete
     forEach(newUsers, (a) => {
-        // map.addAthleteMarker(a);
+        map.addAthleteMarker(a);
     });
 });
 
@@ -89,6 +89,10 @@ connection.onopen = function (session, details) {
         db.user_stream.receiveUsers(usrs);
     }
 
+    function receiveTrackHandler(track) {
+        db.track_stream.receiveTracks([track]);
+    }
+
     if (pagetype === 'u') {
         console.info("Initializing user track page for user "+uid);
         session.call('at.public.users.get_user_by_hash', [uid]).then(
@@ -97,6 +101,13 @@ connection.onopen = function (session, details) {
                 console.error("Error getting user by hash");
                 let errmsg = "There was an error loading the user. We've been notified!";
                 blog.set('messagesLoadError', errmsg);
+            }
+        );
+        session.call(`at.public.location.get_tracks_by_user_id_hash`, [uid]).then(
+            receiveTrackHandler,
+            (err) => {
+                console.error("Error getting tracks by user id hash");
+                // TODO: Add error message to map
             }
         );
         session.call('at.public.messages.fetchmsgs', [uid]).then(

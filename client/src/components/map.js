@@ -6,14 +6,11 @@ mapboxgl.accessToken = process.env.MAPBOX_ACCESSTOKEN;
 
 let geojsonLine = function (coords) {
     return {
-        "type": "geojson",
-        "data": {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "LineString",
-                "coordinates": coords
-            }
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "LineString",
+            "coordinates": coords
         }
     }
 };
@@ -36,38 +33,69 @@ class Map extends EventEmitter {
     addTrack(athleteid, src) {
         let srcname = `source-athleteid-${athleteid}`;
         let layername = `layer-athleteid-${athleteid}`;
-        this.map.addSource(srcname, src);
-        this.map.addLayer({
-            "id": layername,
-            "type": "line",
-            "layout": {"line-join": "round", "line-cap": "round"},
-            "paint": {"line-color": "#F00", "line-width": 6},
-            "source": srcname,
-        });
+
+        // Milliseconds
+        let waittimeout = 5;
+
+        let addsrc = () => {
+            try {
+                this.map.addSource(srcname, src);
+            } catch (e) {
+                waittimeout *= 2;
+                console.info(`Failed to add source to map, trying again after ${waittimeout}ms, reason: ${e}`);
+                // Schedule self again...
+                window.setTimeout(addsrc, waittimeout);
+                // Avoid continuing with rest of func
+                return;
+            }
+            // Do this only if successfully adding source
+            this.map.addLayer({
+                "id": layername,
+                "type": "line",
+                "layout": {"line-join": "round", "line-cap": "round"},
+                "paint": {"line-color": "#F00", "line-width": 4},
+                "source": srcname,
+            });
+        }
+
+        window.setTimeout(addsrc, waittimeout);
     }
     updateTracks(newTracks) {
         for (let track of newTracks) {
+            // Create internal track if new
+            if (this.geojsons[track.user_id] === undefined) {
+                this.geojsons[track.user_id] = geojsonLine([]);
+            }
+            // Now update internal track with new points
+            let lastpt = [0,0];
+            forEach(track.coordinates, (pt)=>{
+                lastpt = pt.slice(0,2);
+                this.geojsons[track.user_id].geometry.coordinates.push(lastpt);
+            });
+            // Go to last position
+            // TODO: Don't do this, if multiple tracks it jumps around
+            this._flyTo(lastpt);
+            // Update athlete marker position
+            let am = this.athleteMarkers[track.user_id];
+            if (am) {
+                am.setLngLat(lastpt);
+            }
+
+            // Now update external (map) track
             let srcname = `source-athleteid-${track.user_id}`;
             let src = this.map.getSource(srcname);
-            let lastpt = [0,0];
-            // Update if exists
-            if (src) {
-                forEach(track.coordinates, (pt)=>{
-                    lastpt = pt.slice(0,2);
-                    this.geojsons[track.user_id].geometry.coordinates.push(lastpt);
+            // Create if not exists
+            if (src === undefined) {
+                // this.map.setCenter(track.coordinates[0].slice(0,2));
+                // Geojson needs to be wrapped like this in order to
+                // adhere to mapboxGL source definition spec, see:
+                // https://www.mapbox.com/mapbox-gl-style-spec/#sources
+                this.addTrack(track.user_id, {
+                    "type": "geojson",
+                    "data": this.geojsons[track.user_id]
                 });
-                this._flyTo(lastpt);
-                // Update athlete marker position
-                let am = this.athleteMarkers[track.user_id];
-                if (am) {
-                    am.setLngLat(lastpt);
-                }
-                src.setData(this.geojsons[track.user_id]);
             } else {
-                this.map.setCenter(track.coordinates[0].slice(0,2));
-                // Create if not exists
-                this.geojsons[track.user_id] = geojsonLine([]).data;
-                this.addTrack(track.user_id, geojsonLine([[0,0],[1,1]]));
+                src.setData(this.geojsons[track.user_id]);
             }
         }
     }
@@ -75,6 +103,7 @@ class Map extends EventEmitter {
         this.map.easeTo({center: lonlat});
     }
     addMsgMarker(msg) {
+        console.log(msg);
         let el = document.createElement('div');
         // Identify message type
         el.className = 'msg-marker ' + msg.className;
@@ -85,9 +114,11 @@ class Map extends EventEmitter {
             this.emit('msgClick', msg.id);
         });
 
-        new mapboxgl.Marker(el, {
-            offset: [0,0]
-        }).setLngLat(msg.coordinates.slice(0,2)).addTo(this.map);
+        if (msg.coordinates !== undefined) {
+            new mapboxgl.Marker(el, {
+                offset: [0, 0]
+            }).setLngLat(msg.coordinates.slice(0, 2)).addTo(this.map);
+        }
     }
     addAthleteMarker(athlete) {
         let el = document.createElement('div');
