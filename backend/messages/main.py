@@ -19,9 +19,22 @@ class MessagesComponent(BackendAppSession):
         async def uniquemsgs(n=5):
             return await db.uniquemsgs(n=n)
 
-        async def get_msgs_by_user_id(user_id_hash):
+        async def add_location(msgs):
+            for msg in msgs:
+                # Only add if not present yet
+                if not msg.get('location'):
+                    user_id = msg['user_id']
+                    timestamp = msg['timestamp']
+                    # Will return None if not able to find coords
+                    coords = await self.call('at.location.guess_coords_by_user_id', user_id, timestamp)
+                    if coords:
+                        msg['coordinates'] = coords
+            return msgs
+
+        async def get_msgs_by_user_id_hash(user_id_hash):
             user_id = await self.call('at.users.get_user_id_by_hash', user_id_hash)
-            return await db.getmsgs(user_id, exclude_sensitive=True)
+            msgs = await db.getmsgs(user_id, exclude_sensitive=True)
+            return await add_location(msgs)
 
         async def get_msgs_by_adventure_hash(adventure_url_hash):
             out = []
@@ -43,7 +56,7 @@ class MessagesComponent(BackendAppSession):
                 msgs = await db.getmsgs(user_id, start=start, end=end, exclude_sensitive=True)
                 logger.debug("Found %s messages for user id=%s in adventure id=%s start=%s end=%s", len(msgs), user_id, adv_id, start, end)
                 out.extend(msgs)
-            return out
+            return await add_location(out)
 
         async def pub_msg_update(msg_id):
             msg = await db.getmsg(msg_id, exclude_sensitive=True)
@@ -102,7 +115,7 @@ class MessagesComponent(BackendAppSession):
                 await pub_msg_update(media['msg_id'])
 
         self.register(uniquemsgs, 'at.messages.uniquemsgs')
-        self.register(get_msgs_by_user_id, 'at.public.messages.fetchmsgs')
+        self.register(get_msgs_by_user_id_hash, 'at.public.messages.fetchmsgs')
         self.register(get_msgs_by_adventure_hash, 'at.public.messages.get_msgs_by_adventure_hash')
         self.register(insertmsg, 'at.messages.insertmsg')
         self.subscribe(insertmedia, 'at.transcode.finished')

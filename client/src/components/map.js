@@ -108,7 +108,12 @@ class Map extends EventEmitter {
         // Identify message type
         el.className = 'msg-marker ' + msg.className;
         // Show message text
-        el.innerHTML = msg.text || '';
+        let txt = msg.text || '';
+        // Shorten if too long
+        if (txt.length > 22) {
+            txt = txt.slice(0,22) + '...';
+        }
+        el.innerHTML = txt;
 
         el.addEventListener('click', (ev) => {
             this.emit('msgClick', msg.id);
@@ -116,7 +121,7 @@ class Map extends EventEmitter {
 
         if (msg.coordinates !== undefined) {
             new mapboxgl.Marker(el, {
-                offset: [0, 0]
+                offset: [0, -20]
             }).setLngLat(msg.coordinates.slice(0, 2)).addTo(this.map);
         }
     }

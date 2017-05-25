@@ -89,6 +89,9 @@ class Db():
         WHERE user_id=$1 AND gps_point.timestamp >= $2 AND gps_point.timestamp <= $3
         ORDER BY gps_point.timestamp ASC;
         ''', user_id, start, end)
+        # Return None if no results
+        if not recs:
+            return None
         # Same format as incoming
         if return_vanilla:
             return await records_to_dict(recs)
