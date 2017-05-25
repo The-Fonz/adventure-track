@@ -36,7 +36,6 @@ class Db extends EventEmitter {
             // Insert at proper place, do not assume times are sequential
             forEach(newMsgs, (m) => {
                 let cleanm = this._cleanMsg(m);
-                cleanm = this._addMsgLocation(cleanm);
                 cleanedMsgs.push(cleanm);
                 // Find out if there's an existing msg with this id
                 let insertAt = findIndex(this.messages, msg => msg.id===cleanm.id);
@@ -105,27 +104,6 @@ class Db extends EventEmitter {
         out['className'] = 'msgtype-' + msgType;
         out.content = "";
         return out;
-    }
-
-    /**
-     * Add location to message
-     */
-    _addMsgLocation(msg) {
-        // TODO: Handle case where athlete doesn't exist, and where
-        //       there is no track or no track points yet
-        // Try last track point if msg does not have its own location
-        if (msg.coordinates === undefined) {
-            let athletetrack = this.tracks[msg.user_id];
-            // TODO: Refine handling no track points
-            if (athletetrack === undefined) {
-                return msg;
-            }
-            // Take last track point before msg timestamp
-            let insertAt = sortedIndexBy(athletetrack['timestamps'],
-                                        msg.timestamp);
-            msg.coordinates = athletetrack['coordinates'][insertAt-1].slice(0,2);
-        }
-        return msg;
     }
 }
 

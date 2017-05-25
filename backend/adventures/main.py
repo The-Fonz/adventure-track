@@ -51,15 +51,21 @@ class AdventuresComponent(BackendAppSession):
         self.register(get_adventures_by_user_id, 'at.adventures.get_adventures_by_user_id')
 
         async def public_get_users_by_adventure_url_hash(adv_hash):
+            "Retrieve all users for this adventure, returns None if adventure not found and empty list if no user links"
             # First retrieve adventure id
             adv = await self.db.get_adventure_by_hash(adv_hash)
+            # Return None if adventure not found
+            if not adv:
+                return None
             # Now get all user links
             links = await self.db.get_adventure_links(adv['id'])
+            # Will stay empty if no links found
             out = []
-            # Get all users that these links refer to
-            for link in links:
-                usr = await self.call('at.users.get_user_by_id', link['user_id'])
-                out.append(usr)
+            if links:
+                # Get all users that these links refer to
+                for link in links:
+                    usr = await self.call('at.users.get_user_by_id', link['user_id'])
+                    out.append(usr)
             logger.debug("Returned %s users for adventure id=%s", len(out), adv['id'])
             return out
 

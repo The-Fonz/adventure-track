@@ -92,6 +92,9 @@ connection.onopen = function (session, details) {
     function receiveTrackHandler(track) {
         db.track_stream.receiveTracks([track]);
     }
+    function receiveTracksHandler(tracks) {
+        db.track_stream.receiveTracks(tracks);
+    }
 
     if (pagetype === 'u') {
         console.info("Initializing user track page for user "+uid);
@@ -121,9 +124,13 @@ connection.onopen = function (session, details) {
             }
         );
         // Unpack list of args
-        session.subscribe(`at.messages.user.${uid}`, args => receiveMsgHandler(args[0])).then(
-            sub => console.log('subscribed to topic'),
-            err => console.error('failed to subscribe')
+        session.subscribe(`at.public.messages.user.${uid}`, args => receiveMsgHandler(args[0])).then(
+            sub => console.log('subscribed to user messages topic'),
+            err => console.error('failed to subscribe to user messages topic')
+        );
+        session.subscribe(`at.public.location.user.${uid}`, args => receiveTrackHandler(args[0])).then(
+            sub => console.log('subscribed to user location track topic'),
+            err => console.error('failed to subscribe to user location track topic')
         );
     } else if (pagetype === 'a') {
         console.info("Initializing adventure page for adventure " + uid);
@@ -134,6 +141,13 @@ connection.onopen = function (session, details) {
                 console.error("Error getting users by adventure url hash");
                 let errmsg = "There was an error loading the users. We've been notified!";
                 blog.set('messagesLoadError', errmsg);
+            }
+        );
+        session.call(`at.public.location.get_tracks_by_adventure_id_hash`, [uid]).then(
+            receiveTracksHandler,
+            (err) => {
+                console.error("Error getting tracks by adventure id hash");
+                // TODO: Add error message to map
             }
         );
         session.call('at.public.messages.get_msgs_by_adventure_hash', [uid]).then(
@@ -147,9 +161,13 @@ connection.onopen = function (session, details) {
             }
         );
         // Unpack list of args
-        session.subscribe(`at.messages.adventure.${uid}`, args => receiveMsgHandler(args[0])).then(
+        session.subscribe(`at.public.messages.adventure.${uid}`, args => receiveMsgHandler(args[0])).then(
             sub => console.log('subscribed to adventure messages topic'),
             err => console.error('failed to subscribe')
+        );
+        session.subscribe(`at.public.location.adventure.${uid}`, args => receiveTrackHandler(args[0])).then(
+            sub => console.log('subscribed to adventure location track topic'),
+            err => console.error('failed to subscribe to adventure location track topic')
         );
     } else {
         console.error("Invalid page type " + pagetype)

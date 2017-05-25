@@ -94,6 +94,8 @@ class Db(MicroserviceDb):
 
     async def get_adventure_links(self, adv_id):
         recs = await self.pool.fetch('''SELECT * FROM adventures_users_link WHERE adventure_id = $1;''', adv_id)
+        if not recs:
+            return None
         return await records_to_dict(recs)
 
 

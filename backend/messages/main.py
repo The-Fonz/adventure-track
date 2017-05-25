@@ -64,7 +64,7 @@ class MessagesComponent(BackendAppSession):
             try:
                 user_id_hash = await self.call('at.users.get_user_hash_by_id', msg['user_id'])
                 # Emit event on channel at.messages.user.<id_hash>
-                userchannel = 'at.messages.user.{}'.format(user_id_hash)
+                userchannel = 'at.public.messages.user.{}'.format(user_id_hash)
                 # For some reason this method is synchronous
                 self.publish(userchannel, msg)
                 logger.debug("Published message id=%s on channel %s for user_id %s", msg_id, userchannel, msg['user_id'])
@@ -77,7 +77,7 @@ class MessagesComponent(BackendAppSession):
                 advs = await self.call('at.adventures.get_adventures_by_user_id', msg['user_id'], active_at=now)
                 if advs:
                     for adv in advs:
-                        adv_channel = 'at.messages.adventure.{}'.format(adv['url_hash'])
+                        adv_channel = 'at.public.messages.adventure.{}'.format(adv['url_hash'])
                         self.publish(adv_channel, msg)
                         logger.debug("Published message id=%s on channel %s for user_id %s", msg_id, adv_channel, msg['user_id'])
             except ApplicationError:

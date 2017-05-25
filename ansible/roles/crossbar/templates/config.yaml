@@ -26,31 +26,9 @@ workers:
           call: true
           register: false
           publish: false
-          subscribe: false
+          subscribe: true
         disclose:
           caller: true
-          publisher: false
-        cache: true
-      - uri: 'at.messages.user.'
-        match: prefix
-        allow:
-          call: false
-          register: false
-          publish: false
-          subscribe: true
-        disclose:
-          caller: false
-          publisher: false
-        cache: true
-      - uri: 'at.messages.adventure.'
-        match: prefix
-        allow:
-          call: false
-          register: false
-          publish: false
-          subscribe: true
-        disclose:
-          caller: false
           publisher: false
         cache: true
   transports:
