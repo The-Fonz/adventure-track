@@ -56,7 +56,7 @@ class Db():
         # For convenience
         v = lambda n: d.get(n)
         # To string and later back to datetime.datetime so it can be validated
-        d['received'] = datetime.datetime.now().isoformat()
+        d['received'] = datetime.datetime.utcnow().isoformat()
         if validate:
             # Throws ValidationError
             jsonschema.validate(d, JSON_SCHEMA_LOCATION_GPS_POINT)
@@ -113,7 +113,7 @@ class SomeTestCase(db_test_case_factory(Db)):
                                invalidpt)
 
     def test_validpt(self):
-        t = datetime.datetime.now().isoformat()
+        t = datetime.datetime.utcnow().isoformat()
         validpt = {
             "user_id": -10,
             "timestamp": t,

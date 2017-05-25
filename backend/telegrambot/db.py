@@ -46,7 +46,7 @@ class Db():
 
     async def insertlink(self, user_id, telegram_id, existingconn=None):
         conn = existingconn or await self.pool.acquire()
-        timestamp = datetime.datetime.now()
+        timestamp = datetime.datetime.utcnow()
         await conn.execute('INSERT INTO users_telegram_link (created, user_id, telegram_id) '
                            'VALUES ($1, $2, $3)', timestamp, user_id, telegram_id)
         if not existingconn:

@@ -117,7 +117,7 @@ class Db():
         Parses msg json and inserts into db.
         """
         conn = existingconn or self.pool
-        received = datetime.datetime.now()
+        received = datetime.datetime.utcnow()
         user_id = msg['user_id']
         timestamp = msg.get('timestamp', None)
         if timestamp:
@@ -134,7 +134,7 @@ class Db():
 
     async def insertmedia(self, media, existingconn=None):
         conn = existingconn or self.pool
-        received = datetime.datetime.now()
+        received = datetime.datetime.utcnow()
         id = await conn.fetchval('''
         INSERT INTO media (id, msg_id, received, timestamp, original, type, path, log, conf_name, width, height, duration)
         VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id''',
@@ -159,8 +159,8 @@ async def test_db_basics(db):
                 assert msgs == []
                 msgjson = {
                     'user_id': intmin,
-                    'timestamp': datetime.datetime.now().isoformat(),
-                    'received': datetime.datetime.now().isoformat(),
+                    'timestamp': datetime.datetime.utcnow().isoformat(),
+                    'received': datetime.datetime.utcnow().isoformat(),
                     'title': 'Titre',
                     'text': 'Bodytext'}
                 await db.insertmsg(msgjson, existingconn=conn)

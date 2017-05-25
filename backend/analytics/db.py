@@ -74,7 +74,7 @@ class Db():
         Using a list for easy insertion. (It ain't pretty but saves some code.)
         """
         conn = existingconn or await self.pool.acquire()
-        received = datetime.datetime.now()
+        received = datetime.datetime.utcnow()
         id = await conn.fetchval(
             "INSERT INTO analytics_events "
             "(received, event_type, user_id, browser_id, request_url, request_ip, request_method, request_referer, request_user_agent, response_status, response_length, response_time_taken, extra) "

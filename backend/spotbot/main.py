@@ -40,7 +40,7 @@ class SpotBotComponent(BackendAppSession):
             for link in await db.get_all_links(raw=True):
                 # Allow at least 2.5 minutes between calls of the same feed
                 if (link['last_queried'] + datetime.timedelta(minutes=3)
-                    < datetime.datetime.now()):
+                    < datetime.datetime.utcnow()):
                     msgs = await get_spot_api_msgs(link['feed_id'])
                     # TODO: Store in db
             # Sleep for at least 2 seconds to avoid hitting rate limits

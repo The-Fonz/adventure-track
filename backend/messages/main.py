@@ -72,7 +72,7 @@ class MessagesComponent(BackendAppSession):
                 logger.exception("Failed to retrieve user hash or publish update")
             # Now emit on adventure channel(s)
             try:
-                now = datetime.datetime.now().isoformat()
+                now = datetime.datetime.utcnow().isoformat()
                 # Only get adventures that are currently active
                 advs = await self.call('at.adventures.get_adventures_by_user_id', msg['user_id'], active_at=now)
                 if advs:

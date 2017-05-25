@@ -51,7 +51,7 @@ class Db(MicroserviceDb):
         return await self.pool.execute(SQL_CREATE_TABLE_ADVENTURES)
 
     async def insert_adventure(self, adv):
-        created = datetime.datetime.now()
+        created = datetime.datetime.utcnow()
         url_hash = await friendlyhash()
         id = await self.pool.fetchval('''
         INSERT INTO adventures (id, name, created, start, stop, description, url_hash) VALUES (DEFAULT, $1, $2, $3, $4, $5, $6)

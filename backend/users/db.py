@@ -117,7 +117,7 @@ class Db():
         conn = existingconn or await self.pool.acquire()
         "Make new user based on json representation"
         u = dict()
-        created = userjson.get('created', datetime.datetime.now())
+        created = userjson.get('created', datetime.datetime.utcnow())
         # URL-friendly and incremented-db-id-confuscating alphanumeric string identifier
         u['id_hash'] = id_hash or await friendlyhash()
         # Use in e.g. telegram user linking

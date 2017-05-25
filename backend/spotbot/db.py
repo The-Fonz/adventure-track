@@ -35,7 +35,7 @@ class Db():
         return await self.conn.execute(SQL_CREATE_TABLE_SPOTBOT_LINK)
 
     async def create_link(self, linkdict):
-        created = datetime.datetime.now()
+        created = datetime.datetime.utcnow()
         # Init to long time ago, so we can just compare and forget about the None checks
         last_queried = datetime.datetime.min
         l = lambda n: linkdict.get(n)
