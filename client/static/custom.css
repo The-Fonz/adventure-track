@@ -1,12 +1,49 @@
 /* General layout */
+html, body {
+    height: 100%;
+    /* Hides scroll bar */
+    overflow: auto;
+}
 body {
     overflow: auto;
 }
-.panes {
-    height: 100%;
-}
 .rightpane {
     overflow-y: scroll;
+}
+.columns.panes {
+    margin-bottom: 0px !important;
+}
+.wrapper {
+    height: 100%;
+    display: flex;
+    flex-flow: column nowrap;
+}
+.leftpane {
+    display: flex;
+    flex-flow: column nowrap;
+}
+.leftpane #timeline {
+    flex: 0 0 auto;
+}
+.leftpane .mapwrap {
+    /* It will shrink back to normal size, this is
+       to make sure that map size is initialized properly on load,
+       sometimes it would appear as a very narrow slice */
+    height: 100%;
+    flex: 1 1 auto;
+    position: relative;
+}
+.leftpane #map-view {
+    /* flex-grow flex-shrink flex-basis */
+    /*flex: 1 1 auto;*/
+    height: 100%;
+    width: 100%;
+    /* Stretch to mapwrap dimensions */
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
 }
 
 /* Timeline */

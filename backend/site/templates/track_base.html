@@ -16,62 +16,59 @@ adventure-track
 
 {% block base_body %}
 
-<nav class="nav has-shadow"
-    {# Quick hack #}
-    style="position:fixed; left:0;right:0;">
-    <div class="nav-left is-hidden-mobile">
-      <a class="nav-item" href="/">
-        <span>Adventure-Track</span>
-      </a>
-      <!--<a class="nav-item is-tab is-hidden-mobile is-active">Home</a>-->
-      <!--<a class="nav-item is-tab is-hidden-mobile">Features</a>-->
-      <!--<a class="nav-item is-tab is-hidden-mobile">Pricing</a>-->
-      <!--<a class="nav-item is-tab is-hidden-mobile">About</a>-->
-    </div>
-      <div class="nav-center">
-          <span class="nav-item">
-          {% if user %}
-            <span>{{user.first_name}} {{user.last_name}} personal tracking page</span>
-          {% elif adventure %}
-            <span>{{adventure.name}}</span>
-          {% endif %}
-          </span>
-      </div>
-    <!--<span class="nav-toggle">-->
-      <!--<span></span>-->
-      <!--<span></span>-->
-      <!--<span></span>-->
-    <!--</span>-->
-    {# Bulma needs a nav-right to center nav-center #}
-    <div class="nav-right"></div>
-    <!--<div class="nav-right nav-menu">-->
-      <!--<a class="nav-item is-tab is-hidden-tablet is-active">Home</a>-->
-      <!--<a class="nav-item is-tab is-hidden-tablet">Features</a>-->
-      <!--<a class="nav-item is-tab is-hidden-tablet">Pricing</a>-->
-      <!--<a class="nav-item is-tab is-hidden-tablet">About</a>-->
-      <!--<a class="nav-item is-tab">-->
-        <!--<figure class="image is-16x16" style="margin-right: 8px;">-->
-          <!--<img src="http://bulma.io/images/jgthms.png">-->
-        <!--</figure>-->
-        <!--Profile-->
-      <!--</a>-->
-      <!--<a class="nav-item is-tab">Log out</a>-->
-</nav>
-
-<div class="columns panes"
-     {# Quick hack #}
-    style="margin-top:3.25rem; position:relative; height:calc(100% - 3.25rem);">
-    {# Hide on mobile for now, should use tabs instead #}
-    <div class="column leftpane is-half-tablet is-two-thirds-desktop is-hidden-mobile is-unselectable">
-        <div id="map-view"
-             {# Quick hack #}
-            style="height: calc(100vh - 150px - 3.25rem);">
+<div class="wrapper">
+    <nav class="nav has-shadow">
+        <div class="nav-left is-hidden-mobile">
+          <a class="nav-item" href="/">
+            <span>Adventure-Track</span>
+          </a>
+          <!--<a class="nav-item is-tab is-hidden-mobile is-active">Home</a>-->
+          <!--<a class="nav-item is-tab is-hidden-mobile">Features</a>-->
+          <!--<a class="nav-item is-tab is-hidden-mobile">Pricing</a>-->
+          <!--<a class="nav-item is-tab is-hidden-mobile">About</a>-->
         </div>
-        <div id="timeline"></div>
-    </div>
-    <div class="column rightpane">
-        <div id="blog">
-            <div class="loader"></div>
+          <div class="nav-center">
+              <span class="nav-item">
+              {% if user %}
+                <span>{{user.first_name}} {{user.last_name}} personal tracking page</span>
+              {% elif adventure %}
+                <span>{{adventure.name}}</span>
+              {% endif %}
+              </span>
+          </div>
+        <!--<span class="nav-toggle">-->
+          <!--<span></span>-->
+          <!--<span></span>-->
+          <!--<span></span>-->
+        <!--</span>-->
+        {# Bulma needs a nav-right to center nav-center #}
+        <div class="nav-right"></div>
+        <!--<div class="nav-right nav-menu">-->
+          <!--<a class="nav-item is-tab is-hidden-tablet is-active">Home</a>-->
+          <!--<a class="nav-item is-tab is-hidden-tablet">Features</a>-->
+          <!--<a class="nav-item is-tab is-hidden-tablet">Pricing</a>-->
+          <!--<a class="nav-item is-tab is-hidden-tablet">About</a>-->
+          <!--<a class="nav-item is-tab">-->
+            <!--<figure class="image is-16x16" style="margin-right: 8px;">-->
+              <!--<img src="http://bulma.io/images/jgthms.png">-->
+            <!--</figure>-->
+            <!--Profile-->
+          <!--</a>-->
+          <!--<a class="nav-item is-tab">Log out</a>-->
+    </nav>
+
+    <div class="columns is-gapless panes">
+        {# Hide on mobile for now, should use tabs instead #}
+        <div class="column leftpane is-half-tablet is-two-thirds-desktop is-hidden-mobile is-unselectable">
+            <div class="mapwrap">
+                <div id="map-view"></div>
+            </div>
+            <div id="timeline"></div>
+        </div>
+        <div class="column rightpane">
+            <div id="blog">
+                <div class="loader"></div>
+            </div>
         </div>
     </div>
 </div>
