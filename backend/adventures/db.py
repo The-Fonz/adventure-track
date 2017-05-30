@@ -25,7 +25,9 @@ CREATE TABLE adventures
   stop                    TIMESTAMP,
   description             TEXT,
   -- Friendly identifier for links
-  url_hash                CHAR(8) UNIQUE
+  url_hash                CHAR(8) UNIQUE,
+  -- Specific tracking stuff or similar
+  header_includes         TEXT
 );
 
 CREATE TYPE user_adventure_role AS ENUM ('athlete', 'content_creator'); 

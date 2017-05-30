@@ -1,1 +1,8 @@
 {% extends "track_base.html" %}
+
+{% block head %}
+{{super()}}
+{% if adventure.header_includes %}
+    {{ adventure.header_includes | safe }}
+{% endif %}
+{% endblock %}
