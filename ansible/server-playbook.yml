@@ -25,6 +25,7 @@
       tags: ["crossbar"]
     - role: postgres
       dbname: atsite
+      tags: ["postgres"]
     - supervisord
     - role: nginx
       tags: ["nginx"]
