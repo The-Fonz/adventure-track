@@ -22,6 +22,7 @@
     - "{{USER_ROOT}}/media/image"
     - "{{USER_ROOT}}/media/audio"
     - "{{USER_ROOT}}/log"
+    - "{{USER_ROOT}}/assets"
 
 - name: install packages
   tags: ["apt"]

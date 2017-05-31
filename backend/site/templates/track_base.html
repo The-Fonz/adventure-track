@@ -71,6 +71,18 @@ adventure-track
             </div>
         </div>
     </div>
+
+    {% if adventure and adventure.logos %}
+        <div class="logos">
+            {% for logo in adventure.logos %}
+                <div class="slide">
+                    <a href="{{logo.url}}" target="_blank">
+                        <img src="/assets/logos/{{logo.imgsrc}}" alt="{{logo.name}}"/>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 </div>
 
 <div id="overlay"></div>
@@ -160,5 +172,8 @@ adventure-track
 {% endraw %}
 
 <script src="/static/bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="/static/slick.min.js"></script>
+<script src="/static/logo-slider.js"></script>
 
 {% endblock %}

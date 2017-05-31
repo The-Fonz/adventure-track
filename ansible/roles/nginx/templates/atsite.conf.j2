@@ -76,6 +76,11 @@ server {
         alias /home/atuser/adventure-track/client/static/;
     }
 
+    # Assets like logos, might be user-uploaded
+    location /assets/ {
+        alias /home/atuser/assets/;
+    }
+
     # All media (video, image, audio)
     location /media/ {
         {% if not DEV %}

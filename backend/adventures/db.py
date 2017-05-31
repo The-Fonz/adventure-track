@@ -30,6 +30,15 @@ CREATE TABLE adventures
   header_includes         TEXT
 );
 
+CREATE TABLE adventure_logos
+(
+  id                      SERIAL PRIMARY KEY,
+  adventure_id            INTEGER REFERENCES adventures(id),
+  name                    VARCHAR(255),
+  url                     VARCHAR(255),
+  imgsrc                  VARCHAR(255)
+);
+
 CREATE TYPE user_adventure_role AS ENUM ('athlete', 'content_creator'); 
 
 CREATE TABLE adventures_users_link
@@ -69,14 +78,21 @@ class Db(MicroserviceDb):
         return await records_to_dict(recs)
 
     async def get_adventure_by_id(self, adv_id):
+        "Get adventure and logos"
         rec = await self.pool.fetchrow('SELECT * FROM adventures WHERE id = $1;', adv_id)
-        return await record_to_dict(rec)
+        out = await record_to_dict(rec)
+        recs_logos = await self.pool.fetch('SELECT * FROM adventure_logos WHERE adventure_id = $1;', adv_id);
+        out['logos'] = await records_to_dict(recs_logos)
+        print(out)
+        return out
 
     async def get_adventure_by_hash(self, adv_hash):
-        rec = await self.pool.fetchrow('SELECT * FROM adventures WHERE url_hash = $1;', adv_hash)
-        if not rec:
+        # First look up id
+        adv_id = await self.pool.fetchval('SELECT id FROM adventures WHERE url_hash = $1;', adv_hash)
+        if not adv_id:
             return None
-        return await record_to_dict(rec)
+        # Now get by id, to make use of any joins that get_adventure_by_id does
+        return await self.get_adventure_by_id(adv_id)
 
     async def insert_adventure_user_link(self, link):
         id = await self.pool.fetchval('''
