@@ -52,6 +52,10 @@ class AdventuresComponent(BackendAppSession):
 
         async def public_get_users_by_adventure_url_hash(adv_hash):
             "Retrieve all users for this adventure, returns None if adventure not found and empty list if no user links"
+            return await get_users_by_adventure_url_hash(adv_hash, exclude_sensitive=True)
+
+        async def get_users_by_adventure_url_hash(adv_hash, exclude_sensitive=False):
+            "Non-public, retrieves also sensitive information"
             # First retrieve adventure id
             adv = await self.db.get_adventure_by_hash(adv_hash)
             # Return None if adventure not found
@@ -64,12 +68,13 @@ class AdventuresComponent(BackendAppSession):
             if links:
                 # Get all users that these links refer to
                 for link in links:
-                    usr = await self.call('at.users.get_user_by_id', link['user_id'])
+                    usr = await self.call('at.users.get_user_by_id', link['user_id'], exclude_sensitive=exclude_sensitive)
                     out.append(usr)
             logger.debug("Returned %s users for adventure id=%s", len(out), adv['id'])
             return out
 
         self.register(public_get_users_by_adventure_url_hash, 'at.public.adventures.get_users_by_adventure_url_hash')
+        self.register(get_users_by_adventure_url_hash, 'at.adventures.get_users_by_adventure_url_hash')
 
 
 if __name__=="__main__":

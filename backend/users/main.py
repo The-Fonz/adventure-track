@@ -17,11 +17,11 @@ class UsersComponent(BackendAppSession):
         db = await Db.create()
         self.db = db
 
-        async def get_user_by_id(user_id):
-            return await db.get_user_by_id(user_id)
+        async def get_user_by_id(user_id, exclude_sensitive=False):
+            return await db.get_user_by_id(user_id, exclude_sensitive=exclude_sensitive)
 
         async def get_user_by_hash(user_id_hash):
-            return await db.getuser(user_id_hash)
+            return await db.getuser(user_id_hash, exclude_sensitive=False)
 
         async def get_user_by_hash_public(user_id_hash):
             return await db.getuser(user_id_hash, exclude_sensitive=True)
@@ -40,7 +40,7 @@ class UsersComponent(BackendAppSession):
         async def insert_user(usr):
             "Insert properly formatted user"
             id = await db.insertuser(usr)
-            return await db.get_user_by_id(id)
+            return await db.get_user_by_id(id, exclude_sensitive=False)
 
         self.register(get_user_by_id, 'at.users.get_user_by_id')
         self.register(get_user_by_hash, 'at.users.get_user_by_hash')

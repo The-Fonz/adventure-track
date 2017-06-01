@@ -216,7 +216,22 @@ let blog = new Ractive({
         this.set('likes.'+msg_id, true);
         let evt = {'type': 'msglike', 'extra': {'msg_id': msg_id}};
         sendAnalyticsEvent(evt);
+    },
+    scrollToMsg: function (msg_id) {
+        console.log("blog scrollto");
+        let msg_div = this.el.querySelector(`div[data-msgid='${msg_id}']`);
+        this.el.scrollTop = msg_div.offsetTop - 10;
     }
+});
+
+map.on('interacted', () => {
+    sendAnalyticsEvent({'type': 'firstmapinteraction'});
+});
+
+map.on('msgClick', (msg_id) => {
+    sendAnalyticsEvent({'type': 'mapmsgclick', 'extra': {'msg_id': msg_id}});
+    console.log("User clicked on msg on map "+msg_id);
+    blog.scrollToMsg(msg_id);
 });
 
 let overlay = new Ractive({

@@ -88,22 +88,22 @@ class Db():
             out = None
         return out
 
-    async def get_user_by_id(self, user_id):
+    async def get_user_by_id(self, user_id, pass_auth_code=False, exclude_sensitive=False):
         user = await self.pool.fetchrow('SELECT * FROM users WHERE id=$1', user_id)
         if not user:
             raise Exception("User with id %s does not exist", user_id)
-        return await record_to_dict(user)
-
-    async def getuser(self, id_hash, pass_auth_code=False, exclude_sensitive=False):
-        "Get user in json format. Should never pass auth token, just for testing"
-        user = await self.pool.fetchrow('SELECT * FROM users WHERE id_hash=$1', id_hash)
-        if not user:
-            return None
         # Take care to make it a tuple to prevent making a set of letters
         exclude = set(('auth_code',)) if not pass_auth_code else set()
         if exclude_sensitive:
             exclude = exclude.union(set(('email', 'telephone_mobile', 'id_hash', 'created', 'profilepic_original')))
         return await record_to_dict(user, exclude=exclude)
+
+    async def getuser(self, id_hash, pass_auth_code=False, exclude_sensitive=True):
+        "Get user in json format. Should never pass auth token, just for testing"
+        user_id = await self.pool.fetchval('SELECT id FROM users WHERE id_hash=$1;', id_hash)
+        if not user_id:
+            return None
+        return await self.get_user_by_id(user_id, pass_auth_code=pass_auth_code, exclude_sensitive=exclude_sensitive)
 
     async def getuser_id(self, id_hash):
         user_id = await self.pool.fetchval('SELECT id FROM users WHERE id_hash=$1', id_hash)

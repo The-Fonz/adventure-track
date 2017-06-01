@@ -51,7 +51,7 @@ class LocationComponent(BackendAppSession):
             return await db.get_gps_points_by_user_id(user_id)
 
         async def get_tracks_by_adventure_id_hash(adventure_id_hash):
-            users = await self.call('at.public.adventures.get_users_by_adventure_url_hash', adventure_id_hash)
+            users = await self.call('at.adventures.get_users_by_adventure_url_hash', adventure_id_hash)
             if users == None:
                 raise Warning("Adventure does not exist!")
             elif users == []:

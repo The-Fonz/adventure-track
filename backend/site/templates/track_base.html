@@ -65,10 +65,8 @@ adventure-track
             </div>
             <div id="timeline"></div>
         </div>
-        <div class="column rightpane">
-            <div id="blog">
-                <div class="loader"></div>
-            </div>
+        <div id="blog" class="column rightpane">
+            <div class="loader"></div>
         </div>
     </div>
 
@@ -115,7 +113,7 @@ adventure-track
         </div>
         {{/messagesLoadError}}
         {{#messages}}
-        <div fade-in="{duration: 800}" class="card message">
+        <div data-msgid="{{this.id}}" fade-in="{duration: 800}" class="card message">
             {{#if media.image || media.video}}
             <div class="card-image" on-click="show">
                 <figure class="image mediathumb">
