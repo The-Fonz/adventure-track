@@ -34,10 +34,22 @@ db.on('newTracks', (newTracks) => {
 });
 
 let items = new vis.DataSet(db.messages);
-let options = {width: '100%', height: '150px',
-    orientation: {axis: 'top', item: 'top'}};
+let options = {
+    width: '100%',
+    height: '120px',
+    orientation: {axis: 'top', item: 'top'},
+    margin: {axis: 8},
+    stack: false
+};
 let timeline = new vis.Timeline(
     document.getElementById('timeline'), items, options);
+
+timeline.on('click', function (evt) {
+    if (evt.what === 'item') {
+        // id of item
+        blog.scrollToMsg(evt.item);
+    }
+});
 
 db.on('newMsgs', (newMsgs) => {
     forEach(newMsgs, (m) => {

@@ -97,9 +97,12 @@ class Db extends EventEmitter {
         // Infer message types from attributes
         // Default is text, and image/audio/video overrides in that order
         let msgType = 'text';
-        if (out['image_versions']) msgType = 'image';
-        if (out['audio_versions']) msgType = 'audio';
-        if (out['video_versions']) msgType = 'video';
+        let media = out['media'];
+        if (media) {
+            if (media.image) msgType = 'image';
+            if (media.audio) msgType = 'audio';
+            if (media.video) msgType = 'video';
+        }
         // For vis.Timeline icon styling
         out['className'] = 'msgtype-' + msgType;
         out.content = "";
