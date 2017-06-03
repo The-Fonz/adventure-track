@@ -63,6 +63,10 @@ body {
     background: lightgrey;
 }
 
+.adventurelist .card + .card {
+    margin-top: 2em;
+}
+
 /* Athlete markers on map */
 .athlete-marker {
     height: 64px;
