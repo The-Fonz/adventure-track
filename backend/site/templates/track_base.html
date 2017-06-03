@@ -57,9 +57,12 @@ adventure-track
           <!--<a class="nav-item is-tab">Log out</a>-->
     </nav>
 
-    <div class="columns is-gapless panes">
+    <div id="tabmenu" class="tabs is-marginless is-boxed is-fullwidth is-hidden-tablet">
+    </div>
+
+    <div class="columns is-gapless panes is-marginless">
         {# Hide on mobile for now, should use tabs instead #}
-        <div class="column leftpane is-half-tablet is-two-thirds-desktop is-hidden-mobile is-unselectable">
+        <div id="leftpane" class="column leftpane is-half-tablet is-two-thirds-desktop is-hidden-mobile is-unselectable">
             <div class="mapwrap">
                 <div id="map-view"></div>
             </div>
@@ -166,6 +169,23 @@ adventure-track
         </div>
         {{/messages}}
     </div>
+</template>
+
+<template id="tabmenu-template">
+    <ul>
+        <li class="{{ activetab === 'map' ? 'is-active' : '' }}">
+            <a on-click="@this.setActive('map')">
+                <span class="icon is-small"><i class="fa fa-map-o"></i></span>
+                <span>Map</span>
+            </a>
+        </li>
+        <li class="{{ activetab === 'blog' ? 'is-active' : '' }}">
+            <a on-click="@this.setActive('blog')">
+                <span class="icon is-small"><i class="fa fa-comment-o"></i></span>
+                <span>Messages</span>
+            </a>
+        </li>
+    </ul>
 </template>
 {% endraw %}
 

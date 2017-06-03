@@ -13,12 +13,16 @@ body {
 .columns.panes {
     /* Always display flex, even on mobile, not std Bulma setting */
     display: flex;
-    margin-bottom: 0px !important;
+    height: 100%;
 }
 .wrapper {
     height: 100%;
     display: flex;
     flex-flow: column nowrap;
+    justify-content: space-between;
+}
+#tabmenu {
+    flex: 1 0 auto;
 }
 .leftpane {
     display: flex;

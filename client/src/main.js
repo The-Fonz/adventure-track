@@ -29,6 +29,11 @@ let db = new Db();
 // Implement map
 let map = new Map('map-view');
 
+map.map.on('load', ()=>{
+    console.info("Map loaded, resizing now...");
+    map.map.resize();
+});
+
 db.on('newTracks', (newTracks) => {
     map.updateTracks(newTracks);
 });
@@ -285,6 +290,35 @@ let overlay = new Ractive({
         // Stop video play
 
         this.set('visible', false);
+    }
+});
+
+window.map = map;
+map.on('resize', ()=> {console.log('resized')});
+
+let tabmenu = new Ractive({
+    el: document.getElementById('tabmenu'),
+    template: document.getElementById('tabmenu-template').innerHTML,
+    data: {
+        activetab: 'blog'
+    },
+    setActive: function(tab) {
+        sendAnalyticsEvent({'type': 'clicktab', 'extra': {'setactive': tab}});
+        let mapdiv = document.getElementById('leftpane');
+        let blogdiv = document.getElementById('blog');
+        if (tab === 'blog') {
+            this.set('activetab', 'blog');
+            mapdiv.classList.add('is-hidden-mobile');
+            blogdiv.classList.remove('is-hidden-mobile');
+        } else if (tab === 'map') {
+            this.set('activetab', 'map');
+            blogdiv.classList.add('is-hidden-mobile');
+            mapdiv.classList.remove('is-hidden-mobile');
+        } else {
+            throw Error(`Tab ${tab} not recognized`);
+        }
+        // TODO: Clean up
+        map.map.resize();
     }
 });
 
