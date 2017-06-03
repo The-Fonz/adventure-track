@@ -72,8 +72,10 @@ class Db(MicroserviceDb):
 
     async def get_adventures(self, limit=100):
         "Get adventures sorted by creation datetime"
+        # Order descending by stop datetime first, with open-ended first,
+        # then order equal datetimes (all nulls) by start date
         recs = await self.pool.fetch('''
-        SELECT * FROM adventures ORDER BY created LIMIT $1;
+        SELECT * FROM adventures ORDER BY stop DESC NULLS FIRST, start DESC LIMIT $1;
         ''', limit)
         return await records_to_dict(recs)
 
