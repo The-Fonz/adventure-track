@@ -315,7 +315,7 @@ let tabmenu = new Ractive({
             blogdiv.classList.add('is-hidden-mobile');
             mapdiv.classList.remove('is-hidden-mobile');
         } else {
-            throw Error(`Tab ${tab} not recognized`);
+            throw new Error(`Tab ${tab} not recognized`);
         }
         // TODO: Clean up
         map.map.resize();
