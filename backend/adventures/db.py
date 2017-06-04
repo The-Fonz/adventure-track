@@ -27,7 +27,9 @@ CREATE TABLE adventures
   -- Friendly identifier for links
   url_hash                CHAR(8) UNIQUE,
   -- Specific tracking stuff or similar
-  header_includes         TEXT
+  header_includes         TEXT,
+  -- URL to image for showing on social media etc.
+  preview_img             VARCHAR(255)
 );
 
 CREATE TABLE adventure_logos

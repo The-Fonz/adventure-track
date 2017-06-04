@@ -1,8 +1,17 @@
 {% extends "track_base.html" %}
 
+{% block title %}
+Adventure-Track.com - {{adventure.name}}
+{% endblock %}
+
 {% block head %}
 {{super()}}
 {% if adventure.header_includes %}
     {{ adventure.header_includes | safe }}
 {% endif %}
+{# Properly display in facebook share #}
+<meta property="og:title" content="Adventure-Track.com - {{adventure.name}}" />
+<meta property="og:description" content="{{adventure.description}}" />
+<!-- Facebook needs complete url including scheme, not just relative... -->
+<meta property="og:image" content="http://adventure-track.com{{adventure.preview_img}}" />
 {% endblock %}
