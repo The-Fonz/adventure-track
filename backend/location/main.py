@@ -52,6 +52,7 @@ class LocationComponent(BackendAppSession):
 
         async def get_tracks_by_adventure_id_hash(adventure_id_hash):
             users = await self.call('at.adventures.get_users_by_adventure_url_hash', adventure_id_hash)
+            adventure = await self.call('at.adventures.get_adventure_by_hash', adventure_id_hash)
             if users == None:
                 raise Warning("Adventure does not exist!")
             elif users == []:
@@ -60,7 +61,10 @@ class LocationComponent(BackendAppSession):
                 out = []
                 for user in users:
                     user_id = user['id']
-                    gps_points = await db.get_gps_points_by_user_id(user_id)
+                    # Make sure to use min/max datetime if start or stop is None
+                    start = convert_to_datetime(adventure['start']) or datetime.datetime.min
+                    end = convert_to_datetime(adventure['stop']) or datetime.datetime.max
+                    gps_points = await db.get_gps_points_by_user_id(user_id, start=start, end=end)
                     # Do not append if None
                     if gps_points:
                         out.append(gps_points)
