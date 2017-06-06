@@ -108,7 +108,7 @@ class SpotBotComponent(BackendAppSession):
                         logger.debug("Retrieved %s messages from feed %s, of which %s are new",
                                      len(spot_msgs), link['feed_id'], newcount)
             # Sleep for at least 2 seconds to avoid hitting rate limits
-            asyncio.sleep(2.5)
+            await asyncio.sleep(2.5)
 
 
 if __name__=="__main__":
