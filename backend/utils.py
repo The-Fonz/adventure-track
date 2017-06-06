@@ -48,7 +48,7 @@ def convert_to_datetime(s):
 
 def ptz_wkt_to_dict(ptz_wkt):
     "Parses well-known text representation of POINTZ to custom dict"
-    m = re.search("\(([\d\.]+)\s*([\d\.]+)\s*([\d\.]+)\)", ptz_wkt)
+    m = re.search("\(([\-\d\.]+)\s*([\-\d\.]+)\s*([\-\d\.]+)\)", ptz_wkt)
     if not m:
         raise Exception("Format not recognized: %s", ptz_wkt)
     return {

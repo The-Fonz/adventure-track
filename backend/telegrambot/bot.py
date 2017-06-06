@@ -2,6 +2,7 @@ import os
 import uuid
 import json
 import asyncio
+import datetime
 import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -182,9 +183,46 @@ def main(wampsess, loop):
             bot.sendMessage(chat_id=cid, text="Your message could not be saved. We've been notified of this issue. Please try again later.")
 
 
+    def locinfo(bot, update, args):
+        cid = update.message.chat_id
+        telegram_user = update.message.from_user
+        telegram_id = telegram_user.id
+        # Check if user is linked already
+        fut = runcoro(wampsess.db.get_link(telegram_id=telegram_id))
+        link = fut.result()
+        if not link:
+            bot.sendMessage(chat_id=cid, text=MSGS['please_auth'])
+            return
+        update.message.reply_text("Retrieving adventures and athletes...")
+        fut = wampsess.call('at.adventures.get_adventures_by_user_id',
+                            link['user_id'], active_at=datetime.datetime.now().isoformat())
+        adventures = runcoro(asyncio.wait_for(fut, 2)).result()
+        if not adventures:
+            bot.sendMessage(chat_id=cid, text="You are not linked to any active adventures!")
+            return
+        for adv in adventures:
+            fut = wampsess.call('at.adventures.get_adventure_links_by_adv_id', adv['id'])
+            adv_links = runcoro(asyncio.wait_for(fut, 2)).result()
+            for adv_link in adv_links:
+                fut = wampsess.call('at.users.get_user_by_id', adv_link['user_id'])
+                user = runcoro(asyncio.wait_for(fut, 2)).result()
+                fut = wampsess.call('at.location.get_pts_by_user_id', user['id'])
+                pts = runcoro(asyncio.wait_for(fut, 2)).result()
+                if not pts:
+                    update.message.reply_text(text="No known points for {}".format(user['first_name']))
+                else:
+                    lastpt = pts[-1]
+                    logger.info("last pt %s", lastpt)
+                    update.message.reply_text(text="Latest location of {} via {} at {}, altitude {}"
+                    .format(user['first_name'], lastpt['source'], lastpt['timestamp'], lastpt['ptz']['height_m_msl']))
+                    bot.sendLocation(cid, latitude=lastpt['ptz']['latitude'], longitude=lastpt['ptz']['longitude'])
+
+
     start_handler = CommandHandler('start', start, pass_args=True)
+    locinfo_handler = CommandHandler('loc', locinfo, pass_args=True)
     message_handler = MessageHandler(Filters.all, onmsg)
     updater.dispatcher.add_handler(start_handler)
+    updater.dispatcher.add_handler(locinfo_handler)
     updater.dispatcher.add_handler(message_handler)
 
     # Non-blocking

@@ -101,11 +101,16 @@ class LocationComponent(BackendAppSession):
             return [a * (p2[0]-p1[0]) + p1[0],
                     a * (p2[1]-p1[1]) + p1[1]]
 
+        async def get_pts_by_user_id(user_id):
+            "Gets latest points for a specific user"
+            return await db.get_gps_points_by_user_id(user_id, return_vanilla=True)
+
 
         self.register(insert_gps_point, 'at.location.insert_gps_point')
         self.register(get_tracks_by_user_id_hash, 'at.public.location.get_tracks_by_user_id_hash')
         self.register(guess_coords_by_user_id, 'at.location.guess_coords_by_user_id')
         self.register(get_tracks_by_adventure_id_hash, 'at.public.location.get_tracks_by_adventure_id_hash')
+        self.register(get_pts_by_user_id, 'at.location.get_pts_by_user_id')
 
 
 if __name__=="__main__":

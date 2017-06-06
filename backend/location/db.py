@@ -39,9 +39,12 @@ CREATE INDEX gps_point_ptz_index ON gps_point USING BRIN (ptz);
 '''
 
 
+def parsept(p):
+    return [float(c) for c in p.split('(')[-1].split(')')[0].split()]
+
+
 def gps_points_customformat(recs):
     "Convert records to custom, efficient json format"
-    parsept = lambda p: [float(c) for c in p.split('(')[-1].split(')')[0].split()]
     # *user_id* will be the same for every point
     return {"user_id": recs[0]['user_id'],
             "coordinates": [parsept(r['ptz']) for r in recs],
@@ -103,7 +106,7 @@ class Db():
         :return: 
         """
         recs = await self.conn.fetch('''
-        SELECT user_id, timestamp, received, ST_AsText(ptz) ptz
+        SELECT user_id, timestamp, received, source, ST_AsText(ptz) ptz
         FROM gps_point
         WHERE user_id=$1 AND gps_point.timestamp >= $2 AND gps_point.timestamp <= $3
         ORDER BY gps_point.timestamp ASC;
